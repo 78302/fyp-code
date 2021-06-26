@@ -112,18 +112,20 @@ for i in range(EPOCH):
 
     # Use the total scp files
     # Read data index from the total scp file
-    with open('./data/raw_fbank_train_si284.1.scp', 'rb') as scp_file:
+    with open('./data/raw_fbank_train_si284.scp', 'rb') as scp_file:
         # mlp file path: ./data/raw_fbank_train_si284.scp
+        # test file path: ./data/raw_fbank_train_si284.1.scp
         lines = scp_file.readlines()
-        for line in lines[:15]:
+        for line in lines[:6399]:
             temp = str(line).split()[1]
-            file_loc = temp.split(':')[0][28:]  # ark file path; keep [18:]
+            file_loc = temp.split(':')[0][18:]  # ark file path; keep [18:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-            #             print(file_loc, pointer)
+            # print(file_loc, pointer)
 
             # According to the file name and pointer to get the matrix
-            with open('./data' + file_loc, 'rb') as ark_file:
+            with open('../remote/data' + file_loc, 'rb') as ark_file:
                 # mlp file path: '../remote/data' + file_loc
+                # test file path: './data' + file_loc
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
@@ -140,22 +142,26 @@ for i in range(EPOCH):
                 optimizer.step()  # gradients
                 total_train_loss.append(loss.item())
         train_loss.append(np.mean(total_train_loss))
-    print('train complete!')
+    # print('train complete!')
 
     total_valid_loss = []
     rnn.eval()  # Validation
 
     # Use one of scp files
     # Read data index from the total scp file
-    with open('./data/raw_fbank_train_si284.2.scp', 'rb') as scp_file:  # change 1 to dev
+    with open('./data/raw_fbank_dev.scp', 'rb') as scp_file:  
+        # mlp file path: ./data/raw_fbank_dev.scp
+        # test file path: ./data/raw_fbank_train_si284.2.scp
         lines = scp_file.readlines()
-        for line in lines[:3]:
+        for line in lines[:1599]:
             temp = str(line).split()[1]
-            file_loc = temp.split(':')[0][28:]  # ark file path; keep [18:]
+            file_loc = temp.split(':')[0][18:]  # ark file path; keep [18:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
 
             # According to the file name and pointer to get the matrix
-            with open('./data' + file_loc, 'rb') as ark_file:
+            with open('../remote/data' + file_loc, 'rb') as ark_file:
+                # mlp file path: '../remote/data' + file_loc
+                # test file path: './data' + file_loc
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
@@ -170,7 +176,7 @@ for i in range(EPOCH):
                 loss = loss_func(output, utt_mat[:, K:, :])
             total_valid_loss.append(loss.item())
         valid_loss.append(np.mean(total_valid_loss))
-    print('dev complete!')
+    # print('dev complete!')
 
     if (valid_loss[-1] < min_valid_loss):
         torch.save({'epoch': i, 'model': rnn, 'train_loss': train_loss,
