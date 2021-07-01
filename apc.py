@@ -5,8 +5,8 @@ import numpy as np
 
 INPUT_SIZE = 40
 HIDDEN_SIZE = 512  # units inside the lstm
-DROP_RATE = 0.2  # drop-out rate
-LAYERS = 2  # number of lstm layers
+# DROP_RATE = 0.2  # drop-out rate
+LAYERS = 4  # number of lstm layers
 
 
 class toy_lstm(nn.Module):
@@ -17,7 +17,7 @@ class toy_lstm(nn.Module):
             input_size=INPUT_SIZE,
             hidden_size=HIDDEN_SIZE,
             num_layers=LAYERS,
-            dropout=DROP_RATE,
+            # dropout=DROP_RATE,
             batch_first=True
         )
         self.fc = nn.Linear(HIDDEN_SIZE, 40)  # fully connected layer

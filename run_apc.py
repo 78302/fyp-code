@@ -8,8 +8,8 @@ import glob
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 
 
-LEARNING_RATE = 0.01
-EPOCH = 20
+LEARNING_RATE = 0.001
+EPOCH = 40
 
 rnn = toy_lstm().to(device)  
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
@@ -101,7 +101,7 @@ for i in range(EPOCH):
 '''
 
 '''
-K = 8
+K = 2
 # Train + Dev
 train_loss = []
 valid_loss = []
@@ -116,16 +116,16 @@ for i in range(EPOCH):
         # mlp file path: ./data/raw_fbank_train_si284.scp
         # test file path: ./data/raw_fbank_train_si284.1.scp
         lines = scp_file.readlines()
-        for line in lines[:6399]:
+        for line in lines[:2]:
             temp = str(line).split()[1]
-            file_loc = temp.split(':')[0][18:]  # ark file path; keep [18:]
+            file_loc = temp.split(':')[0][28:]  # ark file path; keep [18:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
             # print(file_loc, pointer)
 
             # According to the file name and pointer to get the matrix
-            with open('../remote/data' + file_loc, 'rb') as ark_file:
+            with open('../fyp_code/data' + file_loc, 'rb') as ark_file:
                 # mlp file path: '../remote/data' + file_loc
-                # test file path: './data' + file_loc
+                # test file path: '../fyp_code/data' + file_loc
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
@@ -149,19 +149,19 @@ for i in range(EPOCH):
 
     # Use one of scp files
     # Read data index from the total scp file
-    with open('./data/raw_fbank_dev.scp', 'rb') as scp_file:  
+    with open('./data/raw_fbank_train_si284.scp', 'rb') as scp_file:  
         # mlp file path: ./data/raw_fbank_dev.scp
         # test file path: ./data/raw_fbank_train_si284.2.scp
         lines = scp_file.readlines()
-        for line in lines[:1599]:
+        for line in lines[:2]:
             temp = str(line).split()[1]
-            file_loc = temp.split(':')[0][18:]  # ark file path; keep [18:]
+            file_loc = temp.split(':')[0][28:]  # ark file path; keep [18:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
 
             # According to the file name and pointer to get the matrix
-            with open('../remote/data' + file_loc, 'rb') as ark_file:
+            with open('../fyp_code/data' + file_loc, 'rb') as ark_file:
                 # mlp file path: '../remote/data' + file_loc
-                # test file path: './data' + file_loc
+                # test file path: '../fyp_code/data' + file_loc
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
@@ -192,3 +192,18 @@ for i in range(EPOCH):
                                                                   optimizer.param_groups[0]['lr'])
     mult_step_scheduler.step()  # 学习率更新
     print(log_string)  # 打印日志
+    
+    
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt  
+y = train_loss
+x = np.arange(0,len(train_loss))
+l1=plt.plot(x,y,'r--',label='type1')
+plt.title('Loss')
+plt.xlabel('epoch')
+plt.ylabel('loss')
+plt.legend()
+plt.savefig("loss.pdf")
+
