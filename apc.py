@@ -6,7 +6,7 @@ import numpy as np
 INPUT_SIZE = 40
 HIDDEN_SIZE = 512  # units inside the lstm
 # DROP_RATE = 0.2  # drop-out rate
-LAYERS = 1  # number of lstm layers
+LAYERS = 4  # number of lstm layers
 
 
 class toy_lstm(nn.Module):
