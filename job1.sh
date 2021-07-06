@@ -9,6 +9,10 @@
 # Back to the source folder: home/s2051012
 cd /
 cd /home/s2051012
+# Activate the env?
+. msc/toolchain.rc 
+. msc/venv/bin/activate 
+
 # ls
 
 # Mount the shared file
@@ -20,7 +24,7 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 # ls msc/fyp-code/
 cd msc/fyp-code/
 # python3 run_apc.py
-python3 slurm/run_apc.py > slurm/job.out
+python3 run_apc.py > job.out
 # echo 'Model pretrained!'
 
 
