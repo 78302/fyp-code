@@ -1,6 +1,3 @@
-# print('Hello world!')
-
-# '''
 import torch
 import torch.nn as nn
 import numpy as np
@@ -9,20 +6,45 @@ import kaldiark
 from apc import toy_lstm
 import glob
 
+import argparse
+# Deal with the use input parameters
+# ideal input: epoch, learning-rate, K, input-size, hidden-size, train-scp-path, dev-scp-path, layers
+parser = argparse.ArgumentParser(description='Parse the net paras')
+parser.add_argument('--learning_rate', '-lr', help='Learning rate, not required', type=float, default=0.001)
+parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=100)
+parser.add_argument('--gap', '-k', help='Position in origin where the first prediction correspond to, not required', type=int,  default=2)
+parser.add_argument('--input_size', '-is', help='Input dimension, not required', type=float, default=40)
+parser.add_argument('--hidden_size', '-hs', help='Hidden vector dimension, not required', type=float, default=512)
+parser.add_argument('--layers', '-l', help='Number of LSTM layers used, not required', type=int, default=1)
+parser.add_argument('--train_scp_path', '-tsp', help='Path of the input training scp file, not required', default='./data/raw_fbank_train_si284.scp')
+parser.add_argument('--dev_scp_path', '-dsp', help='Path of the input validation scp file, not required', default='./data/raw_fbank_dev.scp')
+# required=True
+args = parser.parse_args()
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 
+# Assign parameters
+LEARNING_RATE = args.learning_rate
+EPOCH = args.epoch
+K = args.gap
+INPUT_SIZE = args.input_size
+HIDDEN_SIZE = args.hidden_size
+LAYERS = args.layers
+TRAIN_SCP_PATH = eval(args.train_scp_path)
+DEV_SCP_PATH = eval(args.dev_scp_path)
 
-LEARNING_RATE = 0.001
-EPOCH = 1  # change to 100 when using sbatch
-
-rnn = toy_lstm().to(device)  
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
+rnn = toy_lstm(INPUT_SIZE=INPUT_SIZE, HIDDEN_SIZE=HIDDEN_SIZE, LAYERS=LAYERS).to(device)
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
 loss_func = nn.MSELoss()
 # Learning rate decay schedule
 mult_step_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                            milestones=[EPOCH // 2, EPOCH // 4 * 3], gamma=0.5)
+# print(LEARNING_RATE, EPOCH, K, INPUT_SIZE, HIDDEN_SIZE, LAYERS, SCP_PATH)
+# print(rnn)
 
-K = 2
+## LEARNING_RATE = 0.001
+## EPOCH = 1  # change to 100 when using sbatch
+## K = 2
+
 # Train + Dev
 train_loss = []
 valid_loss = []
@@ -38,20 +60,24 @@ for i in range(EPOCH):
 
     # Use the total scp files
     # Read data index from the total scp file
-    with open('./data/raw_fbank_train_si284.scp', 'rb') as scp_file:
+    with open(TRAIN_SCP_PATH, 'rb') as scp_file:
         # mlp file path: ./data/raw_fbank_train_si284.scp
         # test file path: ./data/raw_fbank_train_si284.1.scp
+        # win file path: ./data/raw_fbank_train_si284.1.scp
         lines = scp_file.readlines()
-        for line in lines:
+        for line in lines[:1]:
             temp = str(line).split()[1]
-            file_loc = temp.split(':')[0][18:]  # ark file path; keep [18:]
+            file_loc = temp.split(':')[0][28:]
+            # ark file path; keep [18:]
+            # win keep[28:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
             # print(file_loc, pointer)
 
             # According to the file name and pointer to get the matrix
-            with open('../remote/data' + file_loc, 'rb') as ark_file:
+            with open('./data' + file_loc, 'rb') as ark_file:
                 # mlp file path: '../remote/data' + file_loc
                 # test file path: '../fyp_code/data' + file_loc
+                # win file path: './data' + file_loc
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
@@ -75,19 +101,23 @@ for i in range(EPOCH):
 
     # Use one of scp files
     # Read data index from the total scp file
-    with open('./data/raw_fbank_dev.scp', 'rb') as scp_file:  
+    with open(DEV_SCP_PATH, 'rb') as scp_file:
         # mlp file path: ./data/raw_fbank_dev.scp
         # test file path: ./data/raw_fbank_train_si284.2.scp
+        # win file path: ./data/raw_fbank_train_si284.2.scp
         lines = scp_file.readlines()
-        for line in lines:
+        for line in lines[:1]:
             temp = str(line).split()[1]
-            file_loc = temp.split(':')[0][18:]  # ark file path; keep [18:]
+            file_loc = temp.split(':')[0][28:]
+            # ark file path; keep [18:]
+            # win file keep [28:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
 
             # According to the file name and pointer to get the matrix
-            with open('../remote/data' + file_loc, 'rb') as ark_file:
+            with open('./data' + file_loc, 'rb') as ark_file:
                 # mlp file path: '../remote/data' + file_loc
                 # test file path: '../fyp_code/data' + file_loc
+                # win file path: './data' + file_loc
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
@@ -108,11 +138,11 @@ for i in range(EPOCH):
 #         torch.save({'epoch': i, 'model': rnn, 'train_loss': train_loss,
 #                     'valid_loss': valid_loss}, './LSTM.model')
 #         min_valid_loss = valid_loss[-1]
-    
+
     min_valid_loss = np.min(valid_loss)
-    
+
     end = time.time()
-    
+
     # save the net
     if ((i + 1) % 1 == 0):
         torch.save({'epoch': i + 1, 'state_dict': rnn.state_dict(), 'train_loss': train_loss,
@@ -130,14 +160,14 @@ for i in range(EPOCH):
     tmp = end
     mult_step_scheduler.step()  # 学习率更新
     print(log_string)  # 打印日志
-    
+
 print(end-start)
-    
-    
+
+# Draw the train loss
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt  
+import matplotlib.pyplot as plt
 y = train_loss
 x = np.arange(0,len(train_loss))
 fig, ax = plt.subplots(figsize=(14,7))
@@ -150,69 +180,66 @@ ax.legend()
 
 plt.savefig("loss.pdf")
 
+# from functions import load_model
+# PATH = './model/Epoch1.pth.tar'
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#
+# # 对照-使用默认参数
+# rnn_raw = toy_lstm(INPUT_SIZE=INPUT_SIZE, HIDDEN_SIZE=HIDDEN_SIZE, LAYERS=LAYERS).to(device)
+# optimizer_raw = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
+#
+# # 使用预训练参数
+# rnn_pretrain = toy_lstm(INPUT_SIZE=INPUT_SIZE, HIDDEN_SIZE=HIDDEN_SIZE, LAYERS=LAYERS).to(device)
+# optimizer_pretrain = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
+# rnn_pretrain, optimizer_pretrain = load_model(PATH, rnn_pretrain, optimizer_pretrain)
+#
+# rnn_pretrain.eval()
+# rnn_raw.eval()
+#
+# # get 2 utt mats:
+# # Predefine the prediction gap
+# K = 2  # predefine the gap
+#
+# ori_mat = []
+# pre_mat = []
+# with open('./data/raw_fbank_train_si284.1.scp', 'rb') as scp_file:
+#     # mlp use: './data/raw_fbank_train_si284.1.scp'
+#     # win use: './data/raw_fbank_train_si284.1.scp'
+#     lines = scp_file.readlines()
+#     # for line in lines[:2]:  # use 1 utt to test
+#     temp = str(lines[0]).split()[1]
+#     file_loc = temp.split(':')[0][28:]  # ark file path; keep [18:]
+#     pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
+#
+#     # According to the file name and pointer to get the matrix
+#     with open('./data' + file_loc, 'rb') as ark_file:
+#         ark_file.seek(int(pointer))
+#         utt_mat = kaldiark.parse_feat_matrix(ark_file)
+#
+#         utt_mat = np.expand_dims(utt_mat, axis=0)  # expand a new dimension as batch
+#         utt_mat = torch.Tensor(utt_mat).to(device)   # change data to tensor
+#
+#         output_raw = rnn_raw(utt_mat[:, :-K, :])
+#         output_pretrain = rnn_pretrain(utt_mat[:, :-K, :])
+#
+#         ori_mat.append(utt_mat[0, :-K, :])
+#         pre_mat.append(output_raw[0])
+#         pre_mat.append(output_pretrain[0])
+#
+# m1 = ori_mat[0].cpu().numpy()
+# m2 = pre_mat[0].cpu().detach().numpy()
+# m3 = pre_mat[1].cpu().detach().numpy()
+#
+# # Save Image Function
+# fig = plt.figure(figsize=(10,8))
+# ax = plt.gca()
+# cax = plt.imshow(m1, cmap='viridis')
+# plt.savefig('origin.pdf')
+#
+# cax = plt.imshow(m2, cmap='viridis')
+# plt.savefig('raw.pdf')
+#
+# cax = plt.imshow(m3, cmap='viridis')
+# plt.savefig('pretrained.pdf')
 
-def load_model(path, model, optimizer):
-    
-    checkpoint = torch.load(path)
-    model.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    return model, optimizer
 
-PATH = './model/Epoch1.pth.tar'
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-# 对照-使用默认参数
-rnn_raw = toy_lstm().to(device)
-optimizer_raw = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
-
-# 使用预训练参数
-rnn_pretrain = toy_lstm().to(device)
-optimizer_pretrain = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
-rnn_pretrain, optimizer_pretrain = load_model(PATH, rnn_pretrain, optimizer_pretrain)
-
-rnn_pretrain.eval()
-rnn_raw.eval()
-
-# get 2 utt mats:
-# Predefine the prediction gap
-K = 2  # predefine the gap
-
-ori_mat = []
-pre_mat = []
-with open('./data/raw_fbank_train_si284.1.scp', 'rb') as scp_file:
-    lines = scp_file.readlines()
-    # for line in lines[:2]:  # use 1 utt to test
-    temp = str(lines[0]).split()[1]
-    file_loc = temp.split(':')[0][28:]  # ark file path; keep [18:]
-    pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-
-    # According to the file name and pointer to get the matrix
-    with open('./data' + file_loc, 'rb') as ark_file:
-        ark_file.seek(int(pointer))
-        utt_mat = kaldiark.parse_feat_matrix(ark_file)
-            
-        utt_mat = np.expand_dims(utt_mat, axis=0)  # expand a new dimension as batch
-        utt_mat = torch.Tensor(utt_mat).to(device)   # change data to tensor
-        
-        output_raw = rnn_raw(utt_mat[:, :-K, :])
-        output_pretrain = rnn_pretrain(utt_mat[:, :-K, :])
-                
-        ori_mat.append(utt_mat[0, :-K, :])
-        pre_mat.append(output_raw[0])
-        pre_mat.append(output_pretrain[0])
-        
-m1 = ori_mat[0].cpu().numpy()
-m2 = pre_mat[0].cpu().detach().numpy()
-m3 = pre_mat[1].cpu().detach().numpy()
-
-# Save Image Function
-fig = plt.figure(figsize=(10,8))
-ax = plt.gca()
-cax = plt.imshow(m1, cmap='viridis')
-plt.savefig('origin.pdf')
-
-cax = plt.imshow(m2, cmap='viridis')
-plt.savefig('raw.pdf')
-
-cax = plt.imshow(m3, cmap='viridis')
-plt.savefig('pretrained.pdf')
