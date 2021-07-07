@@ -13,7 +13,7 @@ import glob
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 
 
 LEARNING_RATE = 0.001
-EPOCH = 1  # change to 100 when using sbatch
+EPOCH = 50  # change to 100 when using sbatch
 
 rnn = toy_lstm().to(device)  
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
@@ -114,7 +114,7 @@ for i in range(EPOCH):
     end = time.time()
     
     # save the net
-    if ((i + 1) % 1 == 0):
+    if ((i + 1) % 10 == 0):
         torch.save({'epoch': i + 1, 'state_dict': rnn.state_dict(), 'train_loss': train_loss,
                     'valid_loss': valid_loss, 'optimizer': optimizer.state_dict()},
                     './model/Epoch{:d}.pth.tar'.format((i + 1), min_valid_loss))
@@ -151,68 +151,69 @@ ax.legend()
 plt.savefig("loss.pdf")
 
 
-def load_model(path, model, optimizer):
+# def load_model(path, model, optimizer):
     
-    checkpoint = torch.load(path)
-    model.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    return model, optimizer
+#     checkpoint = torch.load(path)
+#     model.load_state_dict(checkpoint['state_dict'])
+#     optimizer.load_state_dict(checkpoint['optimizer'])
+#     return model, optimizer
 
-PATH = './model/Epoch1.pth.tar'
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# PATH = './model/Epoch20.pth.tar'
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# 对照-使用默认参数
-rnn_raw = toy_lstm().to(device)
-optimizer_raw = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
+# # 对照-使用默认参数
+# rnn_raw = toy_lstm().to(device)
+# optimizer_raw = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
 
-# 使用预训练参数
-rnn_pretrain = toy_lstm().to(device)
-optimizer_pretrain = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
-rnn_pretrain, optimizer_pretrain = load_model(PATH, rnn_pretrain, optimizer_pretrain)
+# # 使用预训练参数
+# rnn_pretrain = toy_lstm().to(device)
+# optimizer_pretrain = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
+# rnn_pretrain, optimizer_pretrain = load_model(PATH, rnn_pretrain, optimizer_pretrain)
 
-rnn_pretrain.eval()
-rnn_raw.eval()
+# rnn_pretrain.eval()
+# rnn_raw.eval()
 
-# get 2 utt mats:
-# Predefine the prediction gap
-K = 2  # predefine the gap
+# # get 2 utt mats:
+# # Predefine the prediction gap
+# K = 2  # predefine the gap
 
-ori_mat = []
-pre_mat = []
-with open('./data/raw_fbank_train_si284.1.scp', 'rb') as scp_file:
-    lines = scp_file.readlines()
-    # for line in lines[:2]:  # use 1 utt to test
-    temp = str(lines[0]).split()[1]
-    file_loc = temp.split(':')[0][28:]  # ark file path; keep [18:]
-    pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
+# ori_mat = []
+# pre_mat = []
+# with open('./data/raw_fbank_train_si284.1.scp', 'rb') as scp_file:
+#     lines = scp_file.readlines()
+#     # for line in lines[:2]:  # use 1 utt to test
+#     temp = str(lines[0]).split()[1]
+#     file_loc = temp.split(':')[0][28:]  # ark file path; keep [18:]
+#     pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
 
-    # According to the file name and pointer to get the matrix
-    with open('./data' + file_loc, 'rb') as ark_file:
-        ark_file.seek(int(pointer))
-        utt_mat = kaldiark.parse_feat_matrix(ark_file)
+#     # According to the file name and pointer to get the matrix
+#     with open('./data' + file_loc, 'rb') as ark_file:
+#         ark_file.seek(int(pointer))
+#         utt_mat = kaldiark.parse_feat_matrix(ark_file)
             
-        utt_mat = np.expand_dims(utt_mat, axis=0)  # expand a new dimension as batch
-        utt_mat = torch.Tensor(utt_mat).to(device)   # change data to tensor
+#         utt_mat = np.expand_dims(utt_mat, axis=0)  # expand a new dimension as batch
+#         utt_mat = torch.Tensor(utt_mat).to(device)   # change data to tensor
         
-        output_raw = rnn_raw(utt_mat[:, :-K, :])
-        output_pretrain = rnn_pretrain(utt_mat[:, :-K, :])
+#         output_raw = rnn_raw(utt_mat[:, :-K, :])
+#         output_pretrain = rnn_pretrain(utt_mat[:, :-K, :])
                 
-        ori_mat.append(utt_mat[0, :-K, :])
-        pre_mat.append(output_raw[0])
-        pre_mat.append(output_pretrain[0])
+#         ori_mat.append(utt_mat[0, :-K, :])
+#         pre_mat.append(output_raw[0])
+#         pre_mat.append(output_pretrain[0])
         
-m1 = ori_mat[0].cpu().numpy()
-m2 = pre_mat[0].cpu().detach().numpy()
-m3 = pre_mat[1].cpu().detach().numpy()
+# m1 = ori_mat[0].cpu().numpy()
+# m2 = pre_mat[0].cpu().detach().numpy()
+# m3 = pre_mat[1].cpu().detach().numpy()
 
-# Save Image Function
-fig = plt.figure(figsize=(10,8))
-ax = plt.gca()
-cax = plt.imshow(m1, cmap='viridis')
-plt.savefig('origin.pdf')
+# # Save Image Function
+# fig = plt.figure(figsize=(10,8))
+# ax = plt.gca()
+# cax = plt.imshow(m1, cmap='viridis')
+# plt.savefig('origin.pdf')
 
-cax = plt.imshow(m2, cmap='viridis')
-plt.savefig('raw.pdf')
+# cax = plt.imshow(m2, cmap='viridis')
+# plt.savefig('raw.pdf')
 
-cax = plt.imshow(m3, cmap='viridis')
-plt.savefig('pretrained.pdf')
+# cax = plt.imshow(m3, cmap='viridis')
+# plt.savefig('pretrained.pdf')
+
