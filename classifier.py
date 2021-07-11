@@ -11,6 +11,7 @@ class classification_net(torch.nn.Module):
         super(classification_net, self).__init__()
 
         self.PRE_TRAIN = False
+        self.OUTPUT_SIZE = OUTPUT_SIZE
 
         if PRETRAIN_PATH:  # use a pretrain model
             rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=INPUT_SIZE, LAYERS=4)
@@ -34,7 +35,7 @@ class classification_net(torch.nn.Module):
             x = self.pre_train_model(x)
         x = torch.relu(self.hidden_layer(x))
         x = self.out(x)
-        x = torch.nn.functional.softmax(x)
+        # x = torch.nn.functional.softmax(x)
         return x
 
 

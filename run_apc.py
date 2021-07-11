@@ -28,8 +28,8 @@ K = args.gap
 INPUT_SIZE = args.input_size
 HIDDEN_SIZE = args.hidden_size
 LAYERS = args.layers
-TRAIN_SCP_PATH = eval(args.train_scp_path)
-DEV_SCP_PATH = eval(args.dev_scp_path)
+TRAIN_SCP_PATH = args.train_scp_path
+DEV_SCP_PATH = args.dev_scp_path
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
 rnn = toy_lstm(INPUT_SIZE=INPUT_SIZE, HIDDEN_SIZE=HIDDEN_SIZE, LAYERS=LAYERS).to(device)
@@ -241,5 +241,3 @@ plt.savefig("loss.pdf")
 #
 # cax = plt.imshow(m3, cmap='viridis')
 # plt.savefig('pretrained.pdf')
-
-

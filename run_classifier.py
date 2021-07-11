@@ -12,9 +12,9 @@ import argparse
 # ideal input: epoch, learning-rate, K, input-size, hidden-size, train-scp-path, dev-scp-path, layers
 parser = argparse.ArgumentParser(description='Parse the net paras')
 parser.add_argument('--name', '-n', help='Name of the Model, required', required=True)
-parser.add_argument('--learning_rate', '-lr', help='Learning rate, not required', type=float, default=0.001)
+parser.add_argument('--learning_rate', '-lr', help='Learning rate, not required', type=float, default=0.1)
 parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=100)
-# parser.add_argument('--gap', '-k', help='Position in origin where the first prediction correspond to, not required', type=int,  default=2)
+parser.add_argument('--gap', '-k', help='Position in origin where the first prediction correspond to, not required', type=int,  default=100)
 parser.add_argument('--input_size', '-is', help='Input dimension, not required', type=float, default=40)
 parser.add_argument('--hidden_size', '-hs', help='Hidden vector dimension, not required', type=float, default=512)
 parser.add_argument('--output_size', '-os', help='Output dimension, not required', type=float, default=43)
@@ -32,7 +32,7 @@ args = parser.parse_args()
 NAME = args.name
 LEARNING_RATE = args.learning_rate
 EPOCH = args.epoch
-# K = args.gap
+K = args.gap
 INPUT_SIZE = args.input_size
 HIDDEN_SIZE = args.hidden_size
 OUTPUT_SIZE = args.output_size
@@ -77,14 +77,18 @@ dev_fbank_lines = dev_fbank_scp.readlines()
 # Train + Dev
 train_loss = []
 valid_loss = []
+train_acc = []
+valid_acc = []
 min_valid_loss = np.inf
 for i in range(EPOCH):
     total_train_loss = []
     classifier.train()  # Training
 
+    train_correct = 0
+    train_total = 0
     with open(TRAIN_LABEL_SCP_PATH, 'rb') as scp_file:
         bpali_lines = scp_file.readlines()
-        for idx,line in enumerate(bpali_lines[:1]):
+        for idx,line in enumerate(bpali_lines[:K]):
             # Find the label
             temp = str(line).split()[1]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the label
@@ -92,42 +96,55 @@ for i in range(EPOCH):
             train_bpali_file.seek(int(pointer))
             transcript = train_bpali_file.readline()
             labels = str(transcript)[2:-3].split()
+            # print(len(labels))
 
             # Find the utterance
             utt_line = train_fbank_lines[idx]
             temp = str(utt_line).split()[1]
-            utt_file_loc = temp.split(':')[0][24:]  # ark file path; keep [14:]
+            utt_file_loc = temp.split(':')[0][14:]  # ubuntu [24:] mlp [14:]
             utt_pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-            print(temp, utt_file_loc)
+            # print(temp, utt_file_loc)
 
             with open('./data' + utt_file_loc, 'rb') as ark_file:
                 # mlp use: '../remote/data' + utt_file_loc
                 # ubuntu use: './data' + utt_file_loc
                 ark_file.seek(int(utt_pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
+                # print(utt_mat.shape )
                 utt_mat = torch.Tensor(utt_mat).to(DEVICE)   # change data to tensor
 
-                for idx,mat in enumerate(utt_mat):
+                for iidx in range(utt_mat.shape[0]):
+                    mat = utt_mat[iidx]
                     mat = torch.unsqueeze(mat, 0)
                     x = mat.to(DEVICE)
-                    y = standard.index(labels[idx])
+                    y = standard.index(labels[iidx])
                     y = torch.tensor([y], dtype=torch.long).to(DEVICE)
 
                     optimizer.zero_grad()
                     output=classifier(x)
+
+                    # print(torch.equal(output[0].argmax(), y[0]))
+
+                    if torch.equal(output[0].argmax(), y[0]):
+                        train_correct += 1
+                    train_total += 1
+
                     loss=loss_func(output,y)
 
                     loss.backward()
                     optimizer.step()
                     total_train_loss.append(loss.item())
         train_loss.append(np.mean(total_train_loss))
+    train_acc.append(train_correct/train_total)
 
     total_valid_loss = []
     classifier.eval()  # Validation
 
+    dev_correct = 0
+    dev_total = 0
     with open(DEV_LABEL_SCP_PATH, 'rb') as scp_file:
         bpali_lines = scp_file.readlines()
-        for idx,line in enumerate(bpali_lines[:1]):
+        for didx,line in enumerate(bpali_lines[:K//2]):
             # Find the label
             temp = str(line).split()[1]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the label
@@ -135,35 +152,45 @@ for i in range(EPOCH):
             dev_bpali_file.seek(int(pointer))
             transcript = dev_bpali_file.readline()
             labels = str(transcript)[2:-3].split()
-#             print(str(transcript)[2:-3])
+            # print(pointer, len(labels))
 
             # Find the utterance
-            utt_line = dev_fbank_lines[idx]
+            utt_line = dev_fbank_lines[didx]
             temp = str(utt_line).split()[1]
-            utt_file_loc = temp.split(':')[0][24:]  # ark file path; keep [14:]
+            utt_file_loc = temp.split(':')[0][14:]  # ark file path; keep [14:]
             utt_pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-            # print(file_loc, pointer)
+            # print(didxutt_file_loc, utt_pointer)
             # According to the file name and pointer to get the matrix
             with open('./data' + utt_file_loc, 'rb') as ark_file:
                 # mlp use: '../remote/data' + utt_file_loc
                 # ubuntu use: './data' + utt_file_loc
                 ark_file.seek(int(utt_pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
+                # print(utt_mat.shape)
                 utt_mat = torch.Tensor(utt_mat).to(DEVICE)   # change data to tensor
 #                 utt_mat = np.expand_dims(utt_mat, axis=0)  # expand a new dimension as batch
 #             print(utt_mat.shape)
 
-                for idx,mat in enumerate(utt_mat):
+                for diidx in range(utt_mat.shape[0]):
+                    mat = utt_mat[diidx]
                     mat = torch.unsqueeze(mat, 0)
                     x = mat.to(DEVICE)
-                    y = standard.index(labels[idx])
+                    # print(len(labels), iidx)
+                    y = standard.index(labels[diidx])
+                    # print(utt_pointer, len(labels), iidx)
                     y = torch.tensor([y], dtype=torch.long).to(DEVICE)
 
                     with torch.no_grad():
                         output = classifier(x)
+
+                        if torch.equal(output[0].argmax(), y[0]):
+                            dev_correct += 1
+                        dev_total += 1
+
                     loss=loss_func(output,y)
                     total_valid_loss.append(loss.item())
         valid_loss.append(np.mean(total_valid_loss))
+    valid_acc.append(dev_correct/dev_total)
 
     # save the net
 
@@ -172,14 +199,16 @@ for i in range(EPOCH):
     if ((i + 1) % 1 == 0):
         torch.save({'epoch': i + 1, 'state_dict': classifier.state_dict(), 'train_loss': train_loss,
                     'valid_loss': valid_loss, 'optimizer': optimizer.state_dict()},
-                    './model_classifier/Epoch{:d}_'+NAME+'.pth.tar'.format((i + 1), min_valid_loss))
+                    './model_classifier/Epoch{:d}_{:s}.pth.tar'.format((i + 1), NAME))
 
 
     # Log
-    log_string = ('iter: [{:d}/{:d}], train_loss: {:0.6f}, valid_loss: {:0.6f}, '
-                  'best_valid_loss: {:0.6f}, lr: {:0.7f}').format((i + 1), EPOCH,
+    log_string = ('iter: [{:d}/{:d}], train_loss: {:0.6f}, train_acc: {:0.6f}, valid_loss: {:0.6f}, '
+                  'valid_acc: {:0.6f}, best_valid_loss: {:0.6f}, lr: {:0.7f}').format((i + 1), EPOCH,
                                                                   train_loss[-1],
+                                                                  train_acc[-1],
                                                                   valid_loss[-1],
+                                                                  valid_acc[-1],
                                                                   min_valid_loss,
                                                                   optimizer.param_groups[0]['lr'])
     mult_step_scheduler.step()  # 学习率更新
