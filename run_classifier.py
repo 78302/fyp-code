@@ -80,6 +80,11 @@ valid_loss = []
 train_acc = []
 valid_acc = []
 min_valid_loss = np.inf
+
+import time
+start = time.time()
+tmp = start
+
 for i in range(EPOCH):
     total_train_loss = []
     classifier.train()  # Training
@@ -195,6 +200,7 @@ for i in range(EPOCH):
     # save the net
 
     min_valid_loss = np.min(valid_loss)
+    end = time.time()
 
     if ((i + 1) % 1 == 0):
         torch.save({'epoch': i + 1, 'state_dict': classifier.state_dict(), 'train_loss': train_loss,
@@ -211,10 +217,31 @@ for i in range(EPOCH):
                                                                   valid_acc[-1],
                                                                   min_valid_loss,
                                                                   optimizer.param_groups[0]['lr'])
+    tmp = end
     mult_step_scheduler.step()  # 学习率更新
     print(log_string)  # 打印日志
+
+print(end-start)
 
 train_bpali_file.close()
 train_fbank_scp.close()
 dev_bpali_file.close()
 dev_fbank_scp.close()
+
+
+# Draw the train loss
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+y = train_loss
+x = np.arange(0,len(train_acc))
+fig, ax = plt.subplots(figsize=(14,7))
+ax.plot(x,y,'r--',label='type1')
+
+ax.set_title('Loss',fontsize=18)
+ax.set_xlabel('epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
+ax.set_ylabel('loss', fontsize='x-large',fontstyle='oblique')
+ax.legend()
+
+plt.savefig("loss-classifier.pdf")
