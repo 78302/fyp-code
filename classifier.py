@@ -16,7 +16,7 @@ class classification_net(torch.nn.Module):
         if PRETRAIN_PATH:  # use a pretrain model
             rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=INPUT_SIZE, LAYERS=4)
             optimizer_pretrain = torch.optim.Adam(rnn_pretrain_model.parameters(), lr=0.001)  # just attach but no use
-            rnn_pretrain_model, optimizer_pretrain = load_model(PRETRAIN_PATH, rnn_pretrain_model, optimizer_pretrain)  # load the model
+            rnn_pretrain_model, optimizer_pretrain = load_model(PRETRAIN_PATH, rnn_pretrain_model, optimizer_pretrain) # load the model
             self.pre_train_model = nn.Sequential(*list(rnn_pretrain_model.children())[:1])  # only take the LSTM part
 
             for p in self.parameters():  # freeze the pretrained mode parameters
@@ -32,7 +32,9 @@ class classification_net(torch.nn.Module):
 
     def forward(self, x):
         if self.PRE_TRAIN:
-            x = self.pre_train_model(x)
+            x = torch.unsqueeze(x, 0)
+            x, states = self.pre_train_model(x)
+            x = x[0]
         x = torch.relu(self.hidden_layer(x))
         x = self.out(x)
         # x = torch.nn.functional.softmax(x)
@@ -44,7 +46,9 @@ if __name__ == '__main__':
     net1 = classification_net(INPUT_SIZE=40, HIDDEN_SIZE=512, OUTPUT_SIZE=43)
     # print(net1)
 
-    net2 = classification_net(INPUT_SIZE=512, HIDDEN_SIZE=512, OUTPUT_SIZE=43, PRETRAIN_PATH='./model/Epoch1.pth.tar')
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
+
+    net2 = classification_net(INPUT_SIZE=512, HIDDEN_SIZE=512, OUTPUT_SIZE=43, PRETRAIN_PATH='./model/Epoch1.pth.tar').to(DEVICE)
     # print(net2)
 
     for n in filter(lambda p: p.requires_grad, net2.parameters()):
