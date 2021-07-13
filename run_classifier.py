@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description='Parse the net paras')
 parser.add_argument('--name', '-n', help='Name of the Model, required', required=True)
 parser.add_argument('--learning_rate', '-lr', help='Learning rate, not required', type=float, default=0.1)
 parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=100)
-parser.add_argument('--gap', '-k', help='Position in origin where the first prediction correspond to, not required', type=int,  default=100)
+parser.add_argument('--gap', '-k', help='Position in origin where the first prediction correspond to, not required', type=int,  default=1000)
 parser.add_argument('--input_size', '-is', help='Input dimension, not required', type=float, default=40)
 parser.add_argument('--hidden_size', '-hs', help='Hidden vector dimension, not required', type=float, default=512)
 parser.add_argument('--output_size', '-os', help='Output dimension, not required', type=float, default=43)
@@ -93,7 +93,7 @@ for i in range(EPOCH):
     train_total = 0
     with open(TRAIN_LABEL_SCP_PATH, 'rb') as scp_file:
         bpali_lines = scp_file.readlines()
-        for idx,line in enumerate(bpali_lines):  # [:K]
+        for idx,line in enumerate(bpali_lines[:K]):  # [:K]
             # Find the label
             temp = str(line).split()[1]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the label
@@ -149,7 +149,7 @@ for i in range(EPOCH):
     dev_total = 0
     with open(DEV_LABEL_SCP_PATH, 'rb') as scp_file:
         bpali_lines = scp_file.readlines()
-        for didx,line in enumerate(bpali_lines):  # [:K//2]
+        for didx,line in enumerate(bpali_lines[:K//2]):  # [:K//2]
             # Find the label
             temp = str(line).split()[1]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the label
