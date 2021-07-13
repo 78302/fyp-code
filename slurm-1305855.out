@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "run_classifier.py", line 70, in <module>
-    train_bpali_file = open(TRAIN_LABEL_PATH, 'rb')
-FileNotFoundError: [Errno 2] No such file or directory: '..remote/data/wsj/extra/train-si284.bpali'
