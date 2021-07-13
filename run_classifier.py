@@ -234,14 +234,30 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-y = train_loss
-x = np.arange(0,len(train_acc))
+y1 = train_loss
+y2 = valid_loss
+x = np.arange(0,len(train_loss))
 fig, ax = plt.subplots(figsize=(14,7))
-ax.plot(x,y,'r--',label='type1')
+ax.plot(x,y1,'r--',label='type1')
+ax.plot(x,y2,'r--',label='type1')
 
 ax.set_title('Loss',fontsize=18)
-ax.set_xlabel('epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
-ax.set_ylabel('loss', fontsize='x-large',fontstyle='oblique')
+ax.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
+ax.set_ylabel('Loss', fontsize='x-large',fontstyle='oblique')
 ax.legend()
 
-plt.savefig("loss-classifier.pdf")
+plt.savefig("./classify_model/graph/{:s}_loss-classifier.pdf")
+
+y1 = train_acc
+y2 = valid_acc
+x = np.arange(0,len(train_acc))
+fig2, ax2 = plt.subplots(figsize=(14,7))
+ax2.plot(x,y1,'r--',label='type1')
+ax2.plot(x,y2,'r--',label='type1')
+
+ax2.set_title('Accuracy',fontsize=18)
+ax2.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
+ax2.set_ylabel('Acc', fontsize='x-large',fontstyle='oblique')
+ax2.legend()
+
+plt.savefig("./classify_model/graph/{:s}_acc-classifier.pdf")

@@ -24,7 +24,7 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 # ls msc/fyp-code/
 cd msc/fyp-code/
 # python3 run_apc.py
-python3 run_classifier.py -n 'RawInput' -lr 0.01 -e 1 -tu '../remote/data/wsj/extra/si284-0.9-train.fbank.scp' -tl '../remote/data/wsj/extra/si284-0.9-train.bpali.scp' -tp '../remote/data/wsj/extra/train-si284.bpali' -du '../remote/data/wsj/extra/si284-0.9-dev.fbank.scp' -dl '../remote/data/wsj/extra/si284-0.9-dev.bpali.scp' -dp '../remote/data/wsj/extra/si284-0.9-dev.bpali' > job_raw_classifier.out
+python3 run_classifier.py -n 'RawInput' -lr 0.01 -e 1 -tu '../remote/data/wsj/extra/si284-0.9-train.fbank.scp' -tl '../remote/data/wsj/extra/si284-0.9-train.bpali.scp' -tp '../remote/data/wsj/extra/train-si284.bpali' -du '../remote/data/wsj/extra/si284-0.9-dev.fbank.scp' -dl '../remote/data/wsj/extra/si284-0.9-dev.bpali.scp' -dp '../remote/data/wsj/extra/si284-0.9-dev.bpali' > job_raw_classifier_rawInput.out
 # echo 'Model pretrained!'
 
 # Unmount it
