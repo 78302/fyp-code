@@ -109,11 +109,11 @@ for i in range(EPOCH):
             # Find the utterance
             utt_line = train_fbank_lines[idx]
             temp = str(utt_line).split()[1]
-            utt_file_loc = temp.split(':')[0][24:]  # ubuntu [24:] mlp [14:]
+            utt_file_loc = temp.split(':')[0][14:]  # ubuntu [24:] mlp [14:]
             utt_pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
             # print(temp, utt_file_loc)
 
-            with open('./data' + utt_file_loc, 'rb') as ark_file:
+            with open('../remote/data' + utt_file_loc, 'rb') as ark_file:
                 # mlp use: '../remote/data' + utt_file_loc
                 # ubuntu use: './data' + utt_file_loc
                 ark_file.seek(int(utt_pointer))
@@ -195,11 +195,11 @@ for i in range(EPOCH):
             # Find the utterance
             utt_line = dev_fbank_lines[didx]
             temp = str(utt_line).split()[1]
-            utt_file_loc = temp.split(':')[0][24:]  # ark file path; keep [14:]
+            utt_file_loc = temp.split(':')[0][14:]  # ark file path; keep [14:], test ues 24
             utt_pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
             # print(didxutt_file_loc, utt_pointer)
             # According to the file name and pointer to get the matrix
-            with open('./data' + utt_file_loc, 'rb') as ark_file:
+            with open('../remote/data' + utt_file_loc, 'rb') as ark_file:
                 # mlp use: '../remote/data' + utt_file_loc
                 # ubuntu use: './data' + utt_file_loc
                 ark_file.seek(int(utt_pointer))
