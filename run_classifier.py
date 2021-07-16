@@ -101,7 +101,10 @@ for i in range(EPOCH):
             train_bpali_file.seek(int(pointer))
             transcript = train_bpali_file.readline()
             labels = str(transcript)[2:-3].split()
-            # print(len(labels))
+            # Change the label into numbers
+            targets = [standard.index(l) for l in labels]
+            targets = torch.tensor(targets, dtype=torch.long).to(DEVICE)
+            # print(labels[:5], targets[:5])
 
             # Find the utterance
             utt_line = train_fbank_lines[idx]
@@ -117,32 +120,57 @@ for i in range(EPOCH):
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
                 # print(utt_mat.shape )
                 utt_mat = torch.Tensor(utt_mat).to(DEVICE)   # change data to tensor
+                # utt_mat = torch.unsqueeze(utt_mat, 0)
+                # Use batch of utturance instead of single
 
-                for iidx in range(utt_mat.shape[0]):
-                    mat = utt_mat[iidx]
-                    mat = torch.unsqueeze(mat, 0)
-                    x = mat.to(DEVICE)
-                    y = standard.index(labels[iidx])
-                    y = torch.tensor([y], dtype=torch.long).to(DEVICE)
+                output = classifier(utt_mat)
+                # print(output.shape)
+                loss = loss_func(output, targets)
 
-                    optimizer.zero_grad()
-                    output=classifier(x)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
 
-                    # print(torch.equal(output[0].argmax(), y[0]))
+                # Counts the correst preds and total numbers
+                train_total += targets.shape[0]
 
-                    if torch.equal(output[0].argmax(), y[0]):
-                        train_correct += 1
-                    train_total += 1
+                num_corrects = torch.argmax(output, dim=1)
+                train_correct += int(targets.eq(torch.argmax(output, dim=1)).sum())
+                # print(train_total, train_correct)
 
-                    # print(output.shape, y.shape)
 
-                    loss=loss_func(output,y)
-
-                    loss.backward()
-                    optimizer.step()
-                    total_train_loss.append(loss.item())
+                total_train_loss.append(loss.item())
         train_loss.append(np.mean(total_train_loss))
     train_acc.append(train_correct/train_total)
+
+
+    #
+    #             for iidx in range(utt_mat.shape[0]):
+    #                 mat = utt_mat[iidx]
+    #                 mat = torch.unsqueeze(mat, 0)
+    #                 x = mat.to(DEVICE)
+    #                 y = standard.index(labels[iidx])
+    #                 y = torch.tensor([y], dtype=torch.long).to(DEVICE)
+    #
+    #
+    #                 output=classifier(x)
+    #                 optimizer.zero_grad()
+    #
+    #                 # print(torch.equal(output[0].argmax(), y[0]))
+    #
+    #                 if torch.equal(output[0].argmax(), y[0]):
+    #                     train_correct += 1
+    #                 train_total += 1
+    #
+    #                 # print(output.shape, y.shape)
+    #
+    #                 loss=loss_func(output,y)
+    #
+    #                 loss.backward()
+    #                 optimizer.step()
+    #                 total_train_loss.append(loss.item())
+    #     train_loss.append(np.mean(total_train_loss))
+    # train_acc.append(train_correct/train_total)
 
     total_valid_loss = []
     classifier.eval()  # Validation
@@ -159,6 +187,9 @@ for i in range(EPOCH):
             dev_bpali_file.seek(int(pointer))
             transcript = dev_bpali_file.readline()
             labels = str(transcript)[2:-3].split()
+            # Change the label into numbers
+            targets = [standard.index(l) for l in labels]
+            targets = torch.tensor(targets, dtype=torch.long).to(DEVICE)
             # print(pointer, len(labels))
 
             # Find the utterance
@@ -178,24 +209,34 @@ for i in range(EPOCH):
 #                 utt_mat = np.expand_dims(utt_mat, axis=0)  # expand a new dimension as batch
 #             print(utt_mat.shape)
 
-                for diidx in range(utt_mat.shape[0]):
-                    mat = utt_mat[diidx]
-                    mat = torch.unsqueeze(mat, 0)
-                    x = mat.to(DEVICE)
-                    # print(len(labels), iidx)
-                    y = standard.index(labels[diidx])
-                    # print(utt_pointer, len(labels), iidx)
-                    y = torch.tensor([y], dtype=torch.long).to(DEVICE)
+                with torch.no_grad():
+                    output = classifier(utt_mat)
 
-                    with torch.no_grad():
-                        output = classifier(x)
+                loss = loss_func(output, targets)
+                optimizer.step()
 
-                        if torch.equal(output[0].argmax(), y[0]):
-                            dev_correct += 1
-                        dev_total += 1
+                # Counts the correst preds and total numbers
+                dev_total += targets.shape[0]
+                dev_correct += int(targets.eq(torch.argmax(output, dim=1)).sum())
 
-                    loss=loss_func(output,y)
-                    total_valid_loss.append(loss.item())
+                # for diidx in range(utt_mat.shape[0]):
+                #     mat = utt_mat[diidx]
+                #     mat = torch.unsqueeze(mat, 0)
+                #     x = mat.to(DEVICE)
+                #     # print(len(labels), iidx)
+                #     y = standard.index(labels[diidx])
+                #     # print(utt_pointer, len(labels), iidx)
+                #     y = torch.tensor([y], dtype=torch.long).to(DEVICE)
+                #
+                #     with torch.no_grad():
+                #         output = classifier(x)
+                #
+                #         if torch.equal(output[0].argmax(), y[0]):
+                #             dev_correct += 1
+                #         dev_total += 1
+
+                    # loss=loss_func(output,y)
+                total_valid_loss.append(loss.item())
         valid_loss.append(np.mean(total_valid_loss))
     valid_acc.append(dev_correct/dev_total)
 
@@ -212,13 +253,14 @@ for i in range(EPOCH):
 
     # Log
     log_string = ('iter: [{:d}/{:d}], train_loss: {:0.6f}, train_acc: {:0.6f}, valid_loss: {:0.6f}, '
-                  'valid_acc: {:0.6f}, best_valid_loss: {:0.6f}, lr: {:0.7f}').format((i + 1), EPOCH,
+                  'valid_acc: {:0.6f}, best_valid_loss: {:0.6f}, lr: {:0.7f}, time: {:0.7f}').format((i + 1), EPOCH,
                                                                   train_loss[-1],
                                                                   train_acc[-1],
                                                                   valid_loss[-1],
                                                                   valid_acc[-1],
                                                                   min_valid_loss,
-                                                                  optimizer.param_groups[0]['lr'])
+                                                                  optimizer.param_groups[0]['lr'],
+                                                                  (end - tmp))
     tmp = end
     mult_step_scheduler.step()  # 学习率更新
     print(log_string)  # 打印日志
@@ -248,7 +290,7 @@ ax.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
 ax.set_ylabel('Loss', fontsize='x-large',fontstyle='oblique')
 ax.legend()
 
-plt.savefig("./classify_model/graph/{:s}_loss-classifier.pdf")
+plt.savefig("./classify_model/graph/{:s}_loss-classifier.pdf".format(NAME))
 
 y1 = train_acc
 y2 = valid_acc
@@ -262,4 +304,4 @@ ax2.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic'
 ax2.set_ylabel('Acc', fontsize='x-large',fontstyle='oblique')
 ax2.legend()
 
-plt.savefig("./classify_model/graph/{:s}_acc-classifier.pdf")
+plt.savefig("./classify_model/graph/{:s}_acc-classifier.pdf".format(NAME))
