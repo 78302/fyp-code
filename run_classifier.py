@@ -245,7 +245,7 @@ for i in range(EPOCH):
     min_valid_loss = np.min(valid_loss)
     end = time.time()
 
-    if ((i + 1) % 1 == 0):
+    if ((i + 1) % 5 == 0):
         torch.save({'epoch': i + 1, 'state_dict': classifier.state_dict(), 'train_loss': train_loss,
                     'valid_loss': valid_loss, 'optimizer': optimizer.state_dict()},
                     './model_classifier/Epoch{:d}_{:s}.pth.tar'.format((i + 1), NAME))
