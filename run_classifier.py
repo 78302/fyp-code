@@ -282,8 +282,8 @@ y1 = train_loss
 y2 = valid_loss
 x = np.arange(0,len(train_loss))
 fig, ax = plt.subplots(figsize=(14,7))
-ax.plot(x,y1,'r--',label='type1')
-ax.plot(x,y2,'r--',label='type1')
+ax.plot(x,y1,'r--',label='train loss')
+ax.plot(x,y2,'b--',label='valid loss')
 
 ax.set_title('Loss',fontsize=18)
 ax.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
@@ -296,8 +296,8 @@ y1 = train_acc
 y2 = valid_acc
 x = np.arange(0,len(train_acc))
 fig2, ax2 = plt.subplots(figsize=(14,7))
-ax2.plot(x,y1,'r--',label='type1')
-ax2.plot(x,y2,'r--',label='type1')
+ax2.plot(x,y1,'r--',label='train acc')
+ax2.plot(x,y2,'r--',label='valid acc')
 
 ax2.set_title('Accuracy',fontsize=18)
 ax2.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
