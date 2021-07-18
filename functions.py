@@ -53,10 +53,10 @@ def pretrain_representations(pretrain_path, data):
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #     print(DEVICE)
 
-    rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=512, LAYERS=4)
-    optimizer_pretrain = torch.optim.Adam(rnn_pretrain_model.parameters(), lr=0.001)  # just attach but no use
-    rnn_pretrain_model, optimizer_pretrain = load_model(pretrain_path, rnn_pretrain_model, optimizer_pretrain) # load the model
-    pre_train_model = nn.Sequential(*list(rnn_pretrain_model.children())[:1])  # only take the LSTM part
+    rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=512, LAYERS=4).to(DEVICE)
+    optimizer_pretrain = torch.optim.Adam(rnn_pretrain_model.parameters(), lr=0.001).to(DEVICE)  # just attach but no use
+    rnn_pretrain_model, optimizer_pretrain = load_model(pretrain_path, rnn_pretrain_model, optimizer_pretrain).to(DEVICE) # load the model
+    pre_train_model = nn.Sequential(*list(rnn_pretrain_model.children())[:1]).to(DEVICE)  # only take the LSTM part
     pre_train_model.eval()
 #     print(pre_train_model)
 
