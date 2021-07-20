@@ -64,6 +64,7 @@ def pretrain_representations(pretrain_path, data):
 
     data = torch.unsqueeze(data, 0)
     result, states = pre_train_model(data)
+    result.cpu()
     rep = result.detach().numpy()[0]
     return rep
 
