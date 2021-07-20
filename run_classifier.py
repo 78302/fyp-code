@@ -213,7 +213,6 @@ for i in range(EPOCH):
                     output = classifier(utt_mat)
 
                 loss = loss_func(output, targets)
-                optimizer.step()
 
                 # Counts the correst preds and total numbers
                 dev_total += targets.shape[0]
