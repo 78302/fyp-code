@@ -24,8 +24,8 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 # ls msc/fyp-code/
 cd msc/fyp-code/
 # python3 run_apc.py
-python3 kMeans.py -n 'rawInput' -e 1 -k 5 -s './data/raw_fbank_train_si284.scp' > job_kmeans_rawInput_e1_k5.out
-python3 kMeans.py -n 'pretrainInput' -e 1 -k 5 -p './pretrain_model/model/Epoch50.pth.tar' -s './data/raw_fbank_train_si284.scp' > job_kmeans_pretrainInput_e1_k5.out
+python3 kMeans.py -n 'test_km_raw' -e 1 -l 0 -k 1 -s './data/raw_fbank_train_si284.scp' > job_kmeans_test_raw_0_e1_k50.out
+# python3 kMeans.py -n 'test_km_pre' -e 1 -k 1 -p './pretrain_model/model/Epoch50.pth.tar' -s './data/raw_fbank_train_si284.scp' > job_kmeans_pretrainInput_0_e1_k1.out
 # echo 'Model pretrained!'
 
 # Unmount it
