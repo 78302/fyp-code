@@ -9,22 +9,24 @@ import glob
 
 import argparse
 # Deal with the use input parameters
-# ideal input: epoch, learning-rate, K, input-size, hidden-size, train-scp-path, dev-scp-path, layers
 parser = argparse.ArgumentParser(description='Parse the net paras')
 parser.add_argument('--name', '-n', help='Name of the Model, required', required=True)
-parser.add_argument('--learning_rate', '-lr', help='Learning rate, not required', type=float, default=0.1)
-parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=100)
-parser.add_argument('--gap', '-k', help='Position in origin where the first prediction correspond to, not required', type=int,  default=1000)
+parser.add_argument('--learning_rate', '-lr', help='Learning rate, not required', type=float, default=0.001)
+parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=1)
+parser.add_argument('--gap', '-k', help='Position in origin where the first prediction correspond to, not required', type=int,  default=2)
 parser.add_argument('--input_size', '-is', help='Input dimension, not required', type=int, default=40)
 parser.add_argument('--hidden_size', '-hs', help='Hidden vector dimension, not required', type=int, default=512)
 parser.add_argument('--output_size', '-os', help='Output dimension, not required', type=int, default=43)
 parser.add_argument('--model_path', '-p', help='Path of the pre-trained model, not required', default=None)
-parser.add_argument('--train_utt', '-tu', help='Path of the input training utterance scp file, not required', default='./data/si284-0.9-train.fbank.scp')
-parser.add_argument('--train_label', '-tl', help='Path of the input training label scp file, not required', default='./data/si284-0.9-train.bpali.scp')
-parser.add_argument('--train_phone', '-tp', help='Path of the input training label scp file, not required', default='./data/train-si284.bpali')
-parser.add_argument('--dev_utt', '-du', help='Path of the input validation utterance scp file, not required', default='./data/si284-0.9-train.fbank.scp')
-parser.add_argument('--dev_label', '-dl', help='Path of the input validation label scp file, not required', default='./data/si284-0.9-train.bpali.scp')
-parser.add_argument('--dev_phone', '-dp', help='Path of the input training label scp file, not required', default='./data/train-si284.bpali')
+parser.add_argument('--type', '-t', help='Ubuntu type or mlp type, not required default is Ubuntu type', type=int,  default=1)
+parser.add_argument('--order', '-o', help='The order of the epoch, not required', type=int,  default=1)
+
+# parser.add_argument('--train_utt', '-tu', help='Path of the input training utterance scp file, not required', default='./data/si284-0.9-train.fbank.scp')
+# parser.add_argument('--train_label', '-tl', help='Path of the input training label scp file, not required', default='./data/si284-0.9-train.bpali.scp')
+# parser.add_argument('--train_phone', '-tp', help='Path of the input training label scp file, not required', default='./data/train-si284.bpali')
+# parser.add_argument('--dev_utt', '-du', help='Path of the input validation utterance scp file, not required', default='./data/si284-0.9-train.fbank.scp')
+# parser.add_argument('--dev_label', '-dl', help='Path of the input validation label scp file, not required', default='./data/si284-0.9-train.bpali.scp')
+# parser.add_argument('--dev_phone', '-dp', help='Path of the input training label scp file, not required', default='./data/train-si284.bpali')
 # required=True
 args = parser.parse_args()
 
@@ -37,19 +39,29 @@ INPUT_SIZE = args.input_size
 HIDDEN_SIZE = args.hidden_size
 OUTPUT_SIZE = args.output_size
 PRETRAIN_PATH = args.model_path
-# TRAIN_UTT_SCP_PATH = eval(args.train_utt)
-# TRAIN_LABEL_SCP_PATH = eval(args.train_label)
-# TRAIN_LABEL_PATH = eval(args.train_phone)
-# DEV_UTT_SCP_PATH = eval(args.dev_utt)
-# DEV_LABEL_SCP_PATH = eval(args.dev_label)
-# DEV_LABEL_PATH = eval(args.dev_phone)
+TYPE = args.type
+ORDER = args.order
 
-TRAIN_UTT_SCP_PATH = args.train_utt
-TRAIN_LABEL_SCP_PATH = args.train_label
-TRAIN_LABEL_PATH = args.train_phone
-DEV_UTT_SCP_PATH = args.dev_utt
-DEV_LABEL_SCP_PATH = args.dev_label
-DEV_LABEL_PATH = args.dev_phone
+# Decide the file path under different environment
+# Python do not have switch case, use if else instead
+if TYPE == 1:  # under Ubbuntu test environment
+    TRAIN_UTT_SCP_PATH = './data/si284-0.9-train.fbank.scp'
+    TRAIN_LABEL_SCP_PATH = './data/si284-0.9-train.bpali.scp'
+    TRAIN_LABEL_PATH = './data/train-si284.bpali'
+    DEV_UTT_SCP_PATH = './data/si284-0.9-train.fbank.scp'
+    DEV_LABEL_SCP_PATH = './data/si284-0.9-train.bpali.scp'
+    DEV_LABEL_PATH = './data/train-si284.bpali'
+    UTT_RELATIVE_PATH = './data'  # relative path of ark file under Ubuntu environment
+    C = 24  # cutting position to divide the list
+else:
+    TRAIN_UTT_SCP_PATH = '../remote/data/wsj/extra/si284-0.9-train.fbank.scp'
+    TRAIN_LABEL_SCP_PATH = '../remote/data/wsj/extra/si284-0.9-train.bpali.scp'
+    TRAIN_LABEL_PATH = '../remote/data/wsj/extra/train-si284.bpali'
+    DEV_UTT_SCP_PATH = '../remote/data/wsj/extra/si284-0.9-dev.fbank.scp'
+    DEV_LABEL_SCP_PATH = '../remote/data/wsj/extra/si284-0.9-dev.bpali.scp'
+    DEV_LABEL_PATH = '../remote/data/wsj/extra/si284-0.9-dev.bpali'
+    UTT_RELATIVE_PATH = '../remote/data'
+    C = 14
 
 with open('./data/phones-unk.txt', 'r') as ph_file:
     standard = ph_file.read().splitlines()
@@ -62,9 +74,15 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
 classifier = classification_net(INPUT_SIZE=INPUT_SIZE, HIDDEN_SIZE=HIDDEN_SIZE, OUTPUT_SIZE=OUTPUT_SIZE, PRETRAIN_PATH=PRETRAIN_PATH).to(DEVICE)
 # print(net)
 optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, classifier.parameters()), lr=LEARNING_RATE)  # optimize all require grad's parameters
-# Learning rate decay schedule
-mult_step_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                           milestones=[EPOCH // 2, EPOCH // 4 * 3], gamma=0.1)
+
+from functions import load_model
+if ORDER != 1:  # load the previous model
+    path = './model_classifier/Epoch{:d}_{:s}.pth.tar'.format(ORDER-1, NAME)
+    classifier, optimizer = load_model(path, classifier, optimizer) # load the model
+# exit()
+
+
+optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, classifier.parameters()), lr=LEARNING_RATE)  # optimize all require grad's parameters
 loss_func = torch.nn.CrossEntropyLoss()
 
 train_bpali_file = open(TRAIN_LABEL_PATH, 'rb')
@@ -109,11 +127,11 @@ for i in range(EPOCH):
             # Find the utterance
             utt_line = train_fbank_lines[idx]
             temp = str(utt_line).split()[1]
-            utt_file_loc = temp.split(':')[0][14:]  # ubuntu [24:] mlp [14:]
+            utt_file_loc = temp.split(':')[0][C:]  # ubuntu [24:] mlp [14:]
             utt_pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
             # print(temp, utt_file_loc)
 
-            with open('../remote/data' + utt_file_loc, 'rb') as ark_file:
+            with open(UTT_RELATIVE_PATH + utt_file_loc, 'rb') as ark_file:
                 # mlp use: '../remote/data' + utt_file_loc
                 # ubuntu use: './data' + utt_file_loc
                 ark_file.seek(int(utt_pointer))
@@ -195,11 +213,11 @@ for i in range(EPOCH):
             # Find the utterance
             utt_line = dev_fbank_lines[didx]
             temp = str(utt_line).split()[1]
-            utt_file_loc = temp.split(':')[0][14:]  # ark file path; keep [14:], test ues 24
+            utt_file_loc = temp.split(':')[0][C:]  # ark file path; keep [14:], test ues 24
             utt_pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
             # print(didxutt_file_loc, utt_pointer)
             # According to the file name and pointer to get the matrix
-            with open('../remote/data' + utt_file_loc, 'rb') as ark_file:
+            with open(UTT_RELATIVE_PATH + utt_file_loc, 'rb') as ark_file:
                 # mlp use: '../remote/data' + utt_file_loc
                 # ubuntu use: './data' + utt_file_loc
                 ark_file.seek(int(utt_pointer))
@@ -244,10 +262,10 @@ for i in range(EPOCH):
     min_valid_loss = np.min(valid_loss)
     end = time.time()
 
-    if ((i + 1) % 5 == 0):
+    if ((i + 1) % 1 == 0):
         torch.save({'epoch': i + 1, 'state_dict': classifier.state_dict(), 'train_loss': train_loss,
                     'valid_loss': valid_loss, 'optimizer': optimizer.state_dict()},
-                    './model_classifier/Epoch{:d}_{:s}.pth.tar'.format((i + 1), NAME))
+                    './model_classifier/Epoch{:d}_{:s}.pth.tar'.format(ORDER, NAME))
 
 
     # Log
@@ -261,7 +279,7 @@ for i in range(EPOCH):
                                                                   optimizer.param_groups[0]['lr'],
                                                                   (end - tmp))
     tmp = end
-    mult_step_scheduler.step()  # 学习率更新
+    # mult_step_scheduler.step()  # 学习率更新
     print(log_string)  # 打印日志
 
 print(end-start)
@@ -272,35 +290,35 @@ dev_bpali_file.close()
 dev_fbank_scp.close()
 
 
-# Draw the train loss
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-y1 = train_loss
-y2 = valid_loss
-x = np.arange(0,len(train_loss))
-fig, ax = plt.subplots(figsize=(14,7))
-ax.plot(x,y1,'r--',label='train loss')
-ax.plot(x,y2,'b--',label='valid loss')
-
-ax.set_title('Loss',fontsize=18)
-ax.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
-ax.set_ylabel('Loss', fontsize='x-large',fontstyle='oblique')
-ax.legend()
-
-plt.savefig("./classify_model/graph/{:s}_loss-classifier.pdf".format(NAME))
-
-y1 = train_acc
-y2 = valid_acc
-x = np.arange(0,len(train_acc))
-fig2, ax2 = plt.subplots(figsize=(14,7))
-ax2.plot(x,y1,'r--',label='train acc')
-ax2.plot(x,y2,'r--',label='valid acc')
-
-ax2.set_title('Accuracy',fontsize=18)
-ax2.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
-ax2.set_ylabel('Acc', fontsize='x-large',fontstyle='oblique')
-ax2.legend()
-
-plt.savefig("./classify_model/graph/{:s}_acc-classifier.pdf".format(NAME))
+# # Draw the train loss
+# import numpy as np
+# import matplotlib
+# matplotlib.use('Agg')
+# import matplotlib.pyplot as plt
+# y1 = train_loss
+# y2 = valid_loss
+# x = np.arange(0,len(train_loss))
+# fig, ax = plt.subplots(figsize=(14,7))
+# ax.plot(x,y1,'r--',label='train loss')
+# ax.plot(x,y2,'b--',label='valid loss')
+#
+# ax.set_title('Loss',fontsize=18)
+# ax.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
+# ax.set_ylabel('Loss', fontsize='x-large',fontstyle='oblique')
+# ax.legend()
+#
+# plt.savefig("./classify_model/graph/{:s}_loss-classifier.pdf".format(NAME))
+#
+# y1 = train_acc
+# y2 = valid_acc
+# x = np.arange(0,len(train_acc))
+# fig2, ax2 = plt.subplots(figsize=(14,7))
+# ax2.plot(x,y1,'r--',label='train acc')
+# ax2.plot(x,y2,'r--',label='valid acc')
+#
+# ax2.set_title('Accuracy',fontsize=18)
+# ax2.set_xlabel('Epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
+# ax2.set_ylabel('Acc', fontsize='x-large',fontstyle='oblique')
+# ax2.legend()
+#
+# plt.savefig("./classify_model/graph/{:s}_acc-classifier.pdf".format(NAME))

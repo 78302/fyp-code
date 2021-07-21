@@ -14,7 +14,7 @@ class classification_net(torch.nn.Module):
         self.OUTPUT_SIZE = OUTPUT_SIZE
 
         if PRETRAIN_PATH:  # use a pretrain model
-            rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=INPUT_SIZE, LAYERS=4)
+            rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=512, LAYERS=4)
             optimizer_pretrain = torch.optim.Adam(rnn_pretrain_model.parameters(), lr=0.001)  # just attach but no use
             rnn_pretrain_model, optimizer_pretrain = load_model(PRETRAIN_PATH, rnn_pretrain_model, optimizer_pretrain) # load the model
             self.pre_train_model = nn.Sequential(*list(rnn_pretrain_model.children())[:1])  # only take the LSTM part

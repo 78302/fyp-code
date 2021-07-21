@@ -71,8 +71,16 @@ def pretrain_representations(pretrain_path, data):
 
 if __name__ == '__main__':
 
-    # from apc import toy_lstm
-    #
+    from classifier import classification_net
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
+
+    classifier = classification_net(INPUT_SIZE=512, HIDDEN_SIZE=512, OUTPUT_SIZE=43, PRETRAIN_PATH='./pretrain_model/model/Epoch50.pth.tar').to(DEVICE)
+    print(classifier)
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, classifier.parameters()), lr=0.001)  # optimize all require grad's parameters
+
+    path = './model_classifier/Epoch1_test-up-lr0001.pth.tar'
+    classifier, optimizer = load_model(path, classifier, optimizer) # load the model
+
     # rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=512, LAYERS=4)
     # optimizer_pretrain = torch.optim.Adam(rnn_pretrain_model.parameters(), lr=0.001)  # just attach but no use
     # rnn_pretrain_model, optimizer_pretrain = load_model('./model/Epoch1.pth.tar', rnn_pretrain_model, optimizer_pretrain) # load the model
@@ -81,55 +89,55 @@ if __name__ == '__main__':
 
 
     # Test the k-means
-    import random
-
-
-    temp = None
-    start = True
-    epochs = 0
-
-    for e in range(10):
-
-        epoch_error = 0
-
-        # Read the SCP file
-        with open('./data/raw_fbank_train_si284.1.scp', 'rb') as scp_file:
-            # mlp use '../remote/data/wsj/fbank/' replace '/data/'
-            lines = scp_file.readlines()
-            for line in lines[:5]:
-
-                tempt = str(line).split()[1]
-                file_loc = tempt.split(':')[0][28:]  # mlp keep [18:]
-                pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-
-                # Read the ark file to get utterance
-                with open('./data' + file_loc, 'rb') as ark_file:
-                    # use '../remote/data' + file_loc replace './data/' + file_loc
-                    ark_file.seek(int(pointer))
-                    utt_mat = kaldiark.parse_feat_matrix(ark_file)
-
-                    # Use model to get representations
-                    path = './pretrain_model/model/Epoch50.pth.tar'
-                    utt_mat = pretrain_representations(path, utt_mat)
-
-                    # Init centers: randomly pick k data from data set as centers
-                    if start:
-                        centers = np.array(random.sample(list(utt_mat), 4))  # k=4
-                        start = False
-                        print(centers.shape)
-
-                    # Assign data to clusters
-                    assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
-
-                    # Update centers
-                    for c_index in range(4):  # k=4
-                        data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
-                        centers[c_index] = np.mean(data_in_c, axis=0)
-
-                    # Calculate the clustering loss
-                    assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
-                    epoch_error += np.sum(assigns, axis=0)[1]
-                # temp = assigns  # store the old assigns
-
-        print("Epoch {:d} error: {:0.7f}".format((epochs+1), epoch_error))
-        epochs += 1
+    # import random
+    #
+    #
+    # temp = None
+    # start = True
+    # epochs = 0
+    #
+    # for e in range(10):
+    #
+    #     epoch_error = 0
+    #
+    #     # Read the SCP file
+    #     with open('./data/raw_fbank_train_si284.1.scp', 'rb') as scp_file:
+    #         # mlp use '../remote/data/wsj/fbank/' replace '/data/'
+    #         lines = scp_file.readlines()
+    #         for line in lines[:5]:
+    #
+    #             tempt = str(line).split()[1]
+    #             file_loc = tempt.split(':')[0][28:]  # mlp keep [18:]
+    #             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
+    #
+    #             # Read the ark file to get utterance
+    #             with open('./data' + file_loc, 'rb') as ark_file:
+    #                 # use '../remote/data' + file_loc replace './data/' + file_loc
+    #                 ark_file.seek(int(pointer))
+    #                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
+    #
+    #                 # Use model to get representations
+    #                 path = './pretrain_model/model/Epoch50.pth.tar'
+    #                 utt_mat = pretrain_representations(path, utt_mat)
+    #
+    #                 # Init centers: randomly pick k data from data set as centers
+    #                 if start:
+    #                     centers = np.array(random.sample(list(utt_mat), 4))  # k=4
+    #                     start = False
+    #                     print(centers.shape)
+    #
+    #                 # Assign data to clusters
+    #                 assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+    #
+    #                 # Update centers
+    #                 for c_index in range(4):  # k=4
+    #                     data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
+    #                     centers[c_index] = np.mean(data_in_c, axis=0)
+    #
+    #                 # Calculate the clustering loss
+    #                 assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+    #                 epoch_error += np.sum(assigns, axis=0)[1]
+    #             # temp = assigns  # store the old assigns
+    #
+    #     print("Epoch {:d} error: {:0.7f}".format((epochs+1), epoch_error))
+    #     epochs += 1
