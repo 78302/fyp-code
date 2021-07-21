@@ -24,7 +24,7 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 # ls msc/fyp-code/
 cd msc/fyp-code/
 # python3 run_apc.py
-python3 run_classifier.py -n 'UsePretrain-lr0001' -lr 0.001 -is 512 -e 3 -p './model/Epoch1.pth.tar' -tu '../remote/data/wsj/extra/si284-0.9-train.fbank.scp' -tl '../remote/data/wsj/extra/si284-0.9-train.bpali.scp' -tp '../remote/data/wsj/extra/train-si284.bpali' -du '../remote/data/wsj/extra/si284-0.9-dev.fbank.scp' -dl '../remote/data/wsj/extra/si284-0.9-dev.bpali.scp' -dp '../remote/data/wsj/extra/si284-0.9-dev.bpali' > job_raw_classifier_usePretrain_1.out
+python3 run_classifier.py -n 'UsePretrain-lr0001' -lr 0.001 -is 512 -e 20 -p './pretrain_model/model/Epoch50.pth.tar' -tu '../remote/data/wsj/extra/si284-0.9-train.fbank.scp' -tl '../remote/data/wsj/extra/si284-0.9-train.bpali.scp' -tp '../remote/data/wsj/extra/train-si284.bpali' -du '../remote/data/wsj/extra/si284-0.9-dev.fbank.scp' -dl '../remote/data/wsj/extra/si284-0.9-dev.bpali.scp' -dp '../remote/data/wsj/extra/si284-0.9-dev.bpali' > job_classifier_pretrain_lr0001_e20.out
 # echo 'Model pretrained!'
 
 # Unmount it
