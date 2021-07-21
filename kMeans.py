@@ -10,180 +10,280 @@ import matplotlib.pyplot as plt
 from functions import assign_cluster, pretrain_representations
 import random
 
+# Load kmeans paras
 import argparse
 # Deal with the use input parameters
 # ideal input: name, epoch, K, pretrain_model_path, hidden-size, train-scp-path, dev-scp-path, layers
 parser = argparse.ArgumentParser(description='Parse the net paras')
 parser.add_argument('--name', '-n', help='Name of the Model, required', required=True)
 parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=10)
-parser.add_argument('--literable', '-l', help='wheter use multiple Ks to find the best one, not required', type=int,  default=1)
-parser.add_argument('--cluster_number', '-k', help='The largest number of clusters, not required', type=int,  default=50)
-parser.add_argument('--model_path', '-p', help='Path of the pre-trained model, not required', default=None)
-parser.add_argument('--scp_file', '-s', help='Path of the input training utterance scp file, not required', default='./data/raw_fbank_train_si284.1.scp')
+parser.add_argument('--type', '-t', help='Ubuntu type or mlp type, not required default is Ubuntu type', type=int,  default=1)
+parser.add_argument('--cluster_number', '-k', help='The largest number of clusters, not required', type=int,  default=43)
+parser.add_argument('--model_path', '-p', help='Path of the pre-trained model, not required', default=None)  # model path: './pretrain_model/model/Epoch50.pth.tar'
 # required=True
 args = parser.parse_args()
 
 # Assign parameters
 NAME = args.name
 EPOCH = args.epoch
-L = args.literable
+TYPE = args.type
 K = args.cluster_number
 PRETRAIN_PATH = args.model_path
-SCP_FILE = args.scp_file
+
+# Decide the file path under different environment
+# Python do not have switch case, use if else instead
+if TYPE == 1:  # under Ubbuntu test environment
+    SCP_FILE = './data/raw_fbank_train_si284.1.scp'  # scp file path under Ubuntu environment
+    UTT_RELATIVE_PATH = './data/'  # relative path of ark file under Ubuntu environment
+    C = 28  # cutting position to divide the list
+else:
+    SCP_FILE = './data/raw_fbank_train_si284.scp'
+    UTT_RELATIVE_PATH = '../remote/data'
+    C = 18
+
+# print(NAME, EPOCH, TYPE, K, SCP_FILE, UTT_RELATIVE_PATH, C)
+# exit()
 
 random.seed(100)
-total_loss = []
+start = False
 
 import time
 start_time = time.time()
 tmp = start_time
 
-if L:
-    for k in range(1, K+1):
-        start = True
-        epochs = 0
-        temp = None
-        checkpoint = tmp
-        for e in range(EPOCH):
-            epoch_error = 0
+epochs = 0
+temp = None
+k=K
 
-            # Judge whether it can be free from the loop
-            # use if condition
-            # --------------
-            # #################
 
-            # Read the SCP file
-            with open(SCP_FILE, 'rb') as scp_file:
-                # mlp use '../remote/data/wsj/fbank/' replace '/data/'
-                lines = scp_file.readlines()
-                for line in lines:
+# Load ceters and loss
+import csv
+try:
+    centers = np.load(NAME + '_centers.npy')
+    with open(NAME + '_result.csv', 'r') as csv_file:
+        interm_data = []
+        csvreader = csv.reader(csv_file)
+        for l in csvreader:
+            interm_data.append(l)
+        if len(interm_data) > 0 and int(interm_data[-1][0]) == k:  # not empty, load the loss
+            temp = float(interm_data[-1][2])
+        else:  # Need to initialize centers
+            start = True
 
-                    tempt = str(line).split()[1]
-                    file_loc = tempt.split(':')[0][18:]  # mlp keep [18:]
-                    pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-
-                    # Read the ark file to get utterance
-                    with open('../remote/data' + file_loc, 'rb') as ark_file:
-                        # use '../remote/data' + file_loc replace './data/' + file_loc
-                        ark_file.seek(int(pointer))
-                        utt_mat = kaldiark.parse_feat_matrix(ark_file)
-
-                        # Use model to get representations
-                        if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
-                            utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
-
-                        # Init centers: randomly pick k data from data set as centers
-                        if start:
-                            centers = np.array(random.sample(list(utt_mat), k))  # k=4
-                            start = False
-                            print(centers.shape)
-
-                        # Assign data to clusters
-                        assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
-
-                        # Update centers
-                        for c_index in range(k):  # k=4
-                            data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
-                            # print(data_in_c.shape)
-                            if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
-                                centers[c_index] = np.mean(data_in_c, axis=0)
-
-                        # Calculate the clustering loss
-                        assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
-                        epoch_error += np.sum(assigns, axis=0)[1]
-
-            temp = epoch_error  # store the old assigns
-
-            end = time.time()
-            print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), epoch_error, (end-tmp)))
-            tmp = end
-            epochs += 1
-        total_loss.append(epoch_error)
-        print("{:d} clusters, final loss is {:0.7f}, costs {:0.7f} seconds".format(k, epoch_error, (end-checkpoint)))
-    print("The best number of clusters is {:d}, the total trail costs {:0.7f} seconds".format((total_loss.index(min(total_loss))+1), (end-start_time)))
-
-    # Draw the loss trend figure
-    import numpy as np
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    y = total_loss
-    x = np.arange(1, K+1)
-    fig, ax = plt.subplots(figsize=(14,7))
-    ax.plot(x,y,'r--',label='Cluster loss trend')
-
-    ax.set_title('Clustering Loss with various cluster numbers',fontsize=18)
-    ax.set_xlabel('Number of cluster', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
-    ax.set_ylabel('Final clustering Loss', fontsize='x-large',fontstyle='oblique')
-    ax.legend()
-
-    plt.savefig("./kmeans/graph/{:s}_cluster_loss.pdf".format(NAME))
-
-else:
+except: # Need to initialize centers
     start = True
-    epochs = 0
-    temp = None
-    checkpoint = tmp
-    k=K
-    for e in range(EPOCH):
-        epoch_error = 0
-
-        # Judge whether it can be free from the loop
-        # use if condition
-        # --------------
-        # #################
-
-        # Read the SCP file
-        with open(SCP_FILE, 'rb') as scp_file:
-            # mlp use '../remote/data/wsj/fbank/' replace '/data/'
-            lines = scp_file.readlines()
-            for line in lines:
-
-                tempt = str(line).split()[1]
-                file_loc = tempt.split(':')[0][18:]  # mlp keep [18:]
-                pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-
-                # Read the ark file to get utterance
-                with open('../remote/data' + file_loc, 'rb') as ark_file:
-                    # use '../remote/data' + file_loc replace './data/' + file_loc
-                    ark_file.seek(int(pointer))
-                    utt_mat = kaldiark.parse_feat_matrix(ark_file)
-
-                    # Use model to get representations
-                    if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
-                        utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
-
-                    # Init centers: randomly pick k data from data set as centers
-                    if start:
-                        centers = np.array(random.sample(list(utt_mat), k))  # k=4
-                        start = False
-                        print(centers.shape)
-
-                    # Assign data to clusters
-                    assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
-
-                    # Update centers
-                    for c_index in range(k):  # k=4
-                        data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
-                        # print(data_in_c.shape)
-                        if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
-                            centers[c_index] = np.mean(data_in_c, axis=0)
-
-                    # Calculate the clustering loss
-                    assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
-                    epoch_error += np.sum(assigns, axis=0)[1]
-
-        temp = epoch_error  # store the old assigns
-
-        end = time.time()
-        print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), epoch_error, (end-tmp)))
-        tmp = end
-        epochs += 1
-    total_loss.append(epoch_error)
-    print("{:d} clusters, final loss is {:0.7f}, costs {:0.7f} seconds".format(k, epoch_error, (end-checkpoint)))
 
 
+# Start Kmeans procedure
+for e in range(EPOCH):
+    epoch_error = 0
 
+    # Read the SCP file
+    with open(SCP_FILE, 'rb') as scp_file:
+        lines = scp_file.readlines()
+        for line in lines[:5]:
+            tempt = str(line).split()[1]
+            file_loc = tempt.split(':')[0][C:]
+            pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
+
+            # Read the ark file to get utterance
+            with open(UTT_RELATIVE_PATH + file_loc, 'rb') as ark_file:
+                ark_file.seek(int(pointer))
+                utt_mat = kaldiark.parse_feat_matrix(ark_file)
+
+                # Use model to get representations
+                if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
+                    utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
+
+                # Init centers: randomly pick k data from data set as centers
+                if start:
+                    centers = np.array(random.sample(list(utt_mat), k))  # k=4
+                    start = False
+                    print(centers.shape)
+
+                # Assign data to clusters
+                assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+
+                # Update centers
+                for c_index in range(k):  # k=4
+                    data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
+                    # print(data_in_c.shape)
+                    if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
+                        centers[c_index] = np.mean(data_in_c, axis=0)
+
+                # Calculate the clustering loss
+                assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+                epoch_error += np.sum(assigns, axis=0)[1]
+
+    end = time.time()
+    print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), epoch_error, (end-tmp)))
+    tmp = end
+    epochs += 1
+
+    # write to the csv file for each epoch
+    np.save(NAME + '_centers.npy', centers)
+    with open(NAME + '_result.csv', 'a+') as csv_file:
+        csvwriter = csv.writer(csv_file)
+        csvwriter.writerow([k, epochs, epoch_error])
+
+    # Judge whether it can be free from the loop
+    if temp:
+        if int(temp) == int(epoch_error):
+            break
+    temp = epoch_error
+
+print("{:d} clusters, final loss is {:0.7f}, costs {:0.7f} seconds".format(k, epoch_error, (end-start_time)))
+
+
+
+
+'''
+# if L:
+#     for k in range(1, K+1):
+#         start = True
+#         epochs = 0
+#         temp = None
+#         checkpoint = tmp
+#         for e in range(EPOCH):
+#             epoch_error = 0
+#
+#             # Judge whether it can be free from the loop
+#             # use if condition
+#             # --------------
+#             # #################
+#
+#             # Read the SCP file
+#             with open(SCP_FILE, 'rb') as scp_file:
+#                 # mlp use '../remote/data/wsj/fbank/' replace '/data/'
+#                 lines = scp_file.readlines()
+#                 for line in lines:
+#
+#                     tempt = str(line).split()[1]
+#                     file_loc = tempt.split(':')[0][18:]  # mlp keep [18:]
+#                     pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
+#
+#                     # Read the ark file to get utterance
+#                     with open('../remote/data' + file_loc, 'rb') as ark_file:
+#                         # use '../remote/data' + file_loc replace './data/' + file_loc
+#                         ark_file.seek(int(pointer))
+#                         utt_mat = kaldiark.parse_feat_matrix(ark_file)
+#
+#                         # Use model to get representations
+#                         if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
+#                             utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
+#
+#                         # Init centers: randomly pick k data from data set as centers
+#                         if start:
+#                             centers = np.array(random.sample(list(utt_mat), k))  # k=4
+#                             start = False
+#                             print(centers.shape)
+#
+#                         # Assign data to clusters
+#                         assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+#
+#                         # Update centers
+#                         for c_index in range(k):  # k=4
+#                             data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
+#                             # print(data_in_c.shape)
+#                             if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
+#                                 centers[c_index] = np.mean(data_in_c, axis=0)
+#
+#                         # Calculate the clustering loss
+#                         assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+#                         epoch_error += np.sum(assigns, axis=0)[1]
+#
+#             temp = epoch_error  # store the old assigns
+#
+#             end = time.time()
+#             print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), epoch_error, (end-tmp)))
+#             tmp = end
+#             epochs += 1
+#         total_loss.append(epoch_error)
+#         print("{:d} clusters, final loss is {:0.7f}, costs {:0.7f} seconds".format(k, epoch_error, (end-checkpoint)))
+#     print("The best number of clusters is {:d}, the total trail costs {:0.7f} seconds".format((total_loss.index(min(total_loss))+1), (end-start_time)))
+#
+#     # Draw the loss trend figure
+#     import numpy as np
+#     import matplotlib
+#     matplotlib.use('Agg')
+#     import matplotlib.pyplot as plt
+#     y = total_loss
+#     x = np.arange(1, K+1)
+#     fig, ax = plt.subplots(figsize=(14,7))
+#     ax.plot(x,y,'r--',label='Cluster loss trend')
+#
+#     ax.set_title('Clustering Loss with various cluster numbers',fontsize=18)
+#     ax.set_xlabel('Number of cluster', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
+#     ax.set_ylabel('Final clustering Loss', fontsize='x-large',fontstyle='oblique')
+#     ax.legend()
+#
+#     plt.savefig("./kmeans/graph/{:s}_cluster_loss.pdf".format(NAME))
+#
+# else:
+#     start = True
+#     epochs = 0
+#     temp = None
+#     checkpoint = tmp
+#     k=K
+#     for e in range(EPOCH):
+#         epoch_error = 0
+#
+#         # Judge whether it can be free from the loop
+#         # use if condition
+#         # --------------
+#         # #################
+#
+#         # Read the SCP file
+#         with open(SCP_FILE, 'rb') as scp_file:
+#             # mlp use '../remote/data/wsj/fbank/' replace '/data/'
+#             lines = scp_file.readlines()
+#             for line in lines:
+#
+#                 tempt = str(line).split()[1]
+#                 file_loc = tempt.split(':')[0][18:]  # mlp keep [18:]
+#                 pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
+#
+#                 # Read the ark file to get utterance
+#                 with open('../remote/data' + file_loc, 'rb') as ark_file:
+#                     # use '../remote/data' + file_loc replace './data/' + file_loc
+#                     ark_file.seek(int(pointer))
+#                     utt_mat = kaldiark.parse_feat_matrix(ark_file)
+#
+#                     # Use model to get representations
+#                     if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
+#                         utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
+#
+#                     # Init centers: randomly pick k data from data set as centers
+#                     if start:
+#                         centers = np.array(random.sample(list(utt_mat), k))  # k=4
+#                         start = False
+#                         print(centers.shape)
+#
+#                     # Assign data to clusters
+#                     assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+#
+#                     # Update centers
+#                     for c_index in range(k):  # k=4
+#                         data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
+#                         # print(data_in_c.shape)
+#                         if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
+#                             centers[c_index] = np.mean(data_in_c, axis=0)
+#
+#                     # Calculate the clustering loss
+#                     assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+#                     epoch_error += np.sum(assigns, axis=0)[1]
+#
+#         temp = epoch_error  # store the old assigns
+#
+#         end = time.time()
+#         print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), epoch_error, (end-tmp)))
+#         tmp = end
+#         epochs += 1
+#     total_loss.append(epoch_error)
+#     print("{:d} clusters, final loss is {:0.7f}, costs {:0.7f} seconds".format(k, epoch_error, (end-checkpoint)))
+'''
+
+'''
 # for k in range(1, K+1):
 #     start = True
 #     epochs = 0
@@ -352,3 +452,5 @@ else:
 #
 #     kmeans = KMeans(4, X)
 #     kmeans.plot_result(y)
+
+'''
