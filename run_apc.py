@@ -66,6 +66,14 @@ if ORDER != 1:  # load the previous model
     rnn, optimizer = load_model(path, rnn, optimizer) # load the model
 # exit()
 
+# Load loss:
+try:
+    losses = np.load(NAME + '_losses.npy')
+except:
+    losses = np.zeros((2, 100))
+
+
+
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
 loss_func = nn.MSELoss()
 
@@ -173,9 +181,16 @@ for i in range(EPOCH):
                                                                   (end-tmp))
     tmp = end
     # mult_step_scheduler.step()  # 学习率更新
+    losses[0][ORDER-1] = train_loss[-1]
+    losses[1][ORDER-1] = valid_loss[-1]
     print(log_string)  # 打印日志
 
 print(end-start)
+
+
+# Save the train loss into npy
+np.save(NAME + '_losses.npy', losses)
+
 
 # # Draw the train loss
 # import numpy as np

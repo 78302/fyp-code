@@ -68,6 +68,12 @@ with open('./data/phones-unk.txt', 'r') as ph_file:
     # print(standard)
 
 
+# Load loss and acc:
+try:
+    e_results = np.load(NAME + '_results.npy')
+except:
+    e_results = np.zeros((4, 20))  # train loss, val loss, train acc, val acc | 20 epochs
+
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
 # classifier use representation dimension as input size -- i.e. HIDDEN_SIZE
@@ -280,6 +286,11 @@ for i in range(EPOCH):
                                                                   (end - tmp))
     tmp = end
     # mult_step_scheduler.step()  # 学习率更新
+    e_results[0][ORDER-1] = train_loss[-1]
+    e_results[1][ORDER-1] = valid_loss[-1]
+    e_results[2][ORDER-1] = 1 - train_acc[-1]
+    e_results[3][ORDER-1] = 1 - valid_acc[-1]
+
     print(log_string)  # 打印日志
 
 print(end-start)
@@ -288,6 +299,9 @@ train_bpali_file.close()
 train_fbank_scp.close()
 dev_bpali_file.close()
 dev_fbank_scp.close()
+
+# Save the train loss into npy
+np.save(NAME + '_results.npy', e_results)
 
 
 # # Draw the train loss
