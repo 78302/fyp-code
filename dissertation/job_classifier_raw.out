@@ -1,0 +1,40 @@
+iter: [1/1], train_loss: 1.684075, train_acc: 0.514189, valid_loss: 2.243081, valid_acc: 0.388417, best_valid_loss: 2.243081, lr: 0.0010000, time: 1005.1600697
+1005.1600697040558
+iter: [1/1], train_loss: 1.623412, train_acc: 0.527542, valid_loss: 2.291124, valid_acc: 0.390141, best_valid_loss: 2.291124, lr: 0.0010000, time: 1002.9063342
+1002.9063341617584
+iter: [1/1], train_loss: 1.614542, train_acc: 0.529751, valid_loss: 2.207446, valid_acc: 0.393559, best_valid_loss: 2.207446, lr: 0.0010000, time: 1000.3596156
+1000.3596155643463
+iter: [1/1], train_loss: 1.617033, train_acc: 0.529525, valid_loss: 2.223779, valid_acc: 0.391638, best_valid_loss: 2.223779, lr: 0.0010000, time: 993.4885333
+993.4885332584381
+iter: [1/1], train_loss: 1.614528, train_acc: 0.530283, valid_loss: 2.219827, valid_acc: 0.394072, best_valid_loss: 2.219827, lr: 0.0010000, time: 971.7683663
+971.7683663368225
+iter: [1/1], train_loss: 1.616888, train_acc: 0.529735, valid_loss: 2.183527, valid_acc: 0.398540, best_valid_loss: 2.183527, lr: 0.0010000, time: 974.4101226
+974.4101226329803
+iter: [1/1], train_loss: 1.612115, train_acc: 0.530931, valid_loss: 2.185586, valid_acc: 0.398609, best_valid_loss: 2.185586, lr: 0.0010000, time: 980.9434841
+980.9434840679169
+iter: [1/1], train_loss: 1.609453, train_acc: 0.531808, valid_loss: 2.198711, valid_acc: 0.396182, best_valid_loss: 2.198711, lr: 0.0010000, time: 960.3008151
+960.3008151054382
+iter: [1/1], train_loss: 1.608748, train_acc: 0.532157, valid_loss: 2.154412, valid_acc: 0.397805, best_valid_loss: 2.154412, lr: 0.0010000, time: 973.2292225
+973.229222536087
+iter: [1/1], train_loss: 1.608638, train_acc: 0.532366, valid_loss: 2.167802, valid_acc: 0.396709, best_valid_loss: 2.167802, lr: 0.0010000, time: 1020.7176127
+1020.7176127433777
+iter: [1/1], train_loss: 1.608034, train_acc: 0.532621, valid_loss: 2.176492, valid_acc: 0.396734, best_valid_loss: 2.176492, lr: 0.0010000, time: 956.0442359
+956.0442359447479
+iter: [1/1], train_loss: 1.606050, train_acc: 0.533239, valid_loss: 2.191685, valid_acc: 0.395504, best_valid_loss: 2.191685, lr: 0.0010000, time: 953.5135901
+953.5135900974274
+iter: [1/1], train_loss: 1.604543, train_acc: 0.533745, valid_loss: 2.212671, valid_acc: 0.393623, best_valid_loss: 2.212671, lr: 0.0010000, time: 935.2660556
+935.2660555839539
+iter: [1/1], train_loss: 1.611652, train_acc: 0.532131, valid_loss: 2.225869, valid_acc: 0.390398, best_valid_loss: 2.225869, lr: 0.0010000, time: 880.3015778
+880.3015778064728
+iter: [1/1], train_loss: 1.607095, train_acc: 0.533219, valid_loss: 2.222614, valid_acc: 0.393033, best_valid_loss: 2.222614, lr: 0.0010000, time: 871.6023180
+871.6023180484772
+iter: [1/1], train_loss: 1.605260, train_acc: 0.533637, valid_loss: 2.225215, valid_acc: 0.393705, best_valid_loss: 2.225215, lr: 0.0010000, time: 868.6490626
+868.6490626335144
+iter: [1/1], train_loss: 1.604165, train_acc: 0.533823, valid_loss: 2.232790, valid_acc: 0.393182, best_valid_loss: 2.232790, lr: 0.0010000, time: 901.0561318
+901.0561318397522
+iter: [1/1], train_loss: 1.603556, train_acc: 0.533918, valid_loss: 2.235721, valid_acc: 0.393010, best_valid_loss: 2.235721, lr: 0.0010000, time: 932.0124111
+932.0124111175537
+iter: [1/1], train_loss: 1.613457, train_acc: 0.531715, valid_loss: 2.252832, valid_acc: 0.389217, best_valid_loss: 2.252832, lr: 0.0010000, time: 976.6927664
+976.6927664279938
+iter: [1/1], train_loss: 1.611127, train_acc: 0.531817, valid_loss: 2.254601, valid_acc: 0.391002, best_valid_loss: 2.254601, lr: 0.0010000, time: 949.7469447
+949.7469446659088
