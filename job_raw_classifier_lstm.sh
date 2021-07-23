@@ -24,7 +24,7 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 # ls msc/fyp-code/
 cd msc/fyp-code/
 # python3 run_apc.py
-python3 run_classifier.py -n 'LC_pre_lr0001' -lr 0.001 -is 512 -p './pretrain_model/model/Epoch50.pth.tar' -t 0 -o $1 > job_classifier_pre_lr0001_epoch$1.out
+python3 run_classifier.py -n 'LC_lstm_lr0001' -lr 0.001 -is 512 -p './pretrain_model/model/Epoch0.pth.tar' -t 0 -o $1 > job_classifier_lstm_lr0001_epoch$1.out
 # echo 'Model pretrained!'
 
 # Unmount it
