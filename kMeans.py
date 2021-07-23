@@ -16,7 +16,7 @@ import argparse
 # ideal input: name, epoch, K, pretrain_model_path, hidden-size, train-scp-path, dev-scp-path, layers
 parser = argparse.ArgumentParser(description='Parse the net paras')
 parser.add_argument('--name', '-n', help='Name of the Model, required', required=True)
-parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=10)
+parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=1)
 parser.add_argument('--type', '-t', help='Ubuntu type or mlp type, not required default is Ubuntu type', type=int,  default=1)
 parser.add_argument('--cluster_number', '-k', help='The largest number of clusters, not required', type=int,  default=43)
 parser.add_argument('--model_path', '-p', help='Path of the pre-trained model, not required', default=None)  # model path: './pretrain_model/model/Epoch50.pth.tar'
@@ -75,13 +75,15 @@ except: # Need to initialize centers
 
 
 # Start Kmeans procedure
+
+
 for e in range(EPOCH):
     epoch_error = 0
 
     # Read the SCP file
     with open(SCP_FILE, 'rb') as scp_file:
         lines = scp_file.readlines()
-        for line in lines:
+        for line in lines[:10]:  # remove [:K]
             tempt = str(line).split()[1]
             file_loc = tempt.split(':')[0][C:]
             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
@@ -103,6 +105,8 @@ for e in range(EPOCH):
 
                 # Assign data to clusters
                 assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+
+                # Record data information
 
                 # Update centers
                 for c_index in range(k):  # k=4
