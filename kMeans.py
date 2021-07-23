@@ -33,13 +33,13 @@ PRETRAIN_PATH = args.model_path
 # Decide the file path under different environment
 # Python do not have switch case, use if else instead
 if TYPE == 1:  # under Ubbuntu test environment
-    SCP_FILE = './data/raw_fbank_train_si284.1.scp'  # scp file path under Ubuntu environment
+    SCP_FILE = './data/si284-0.9-train.fbank.scp'  # scp file path under Ubuntu environment
     UTT_RELATIVE_PATH = './data/'  # relative path of ark file under Ubuntu environment
-    C = 28  # cutting position to divide the list
+    C = 24  # cutting position to divide the list
 else:
-    SCP_FILE = './data/raw_fbank_train_si284.scp'
+    SCP_FILE = '../remote/data/wsj/extra/si284-0.9-train.fbank.scp'
     UTT_RELATIVE_PATH = '../remote/data'
-    C = 18
+    C = 14
 
 # print(NAME, EPOCH, TYPE, K, SCP_FILE, UTT_RELATIVE_PATH, C)
 # exit()
@@ -77,8 +77,16 @@ except: # Need to initialize centers
 # Start Kmeans procedure
 
 
+
 for e in range(EPOCH):
     epoch_error = 0
+
+    d_centers = np.zeros(k)
+    if PRETRAIN_PATH:
+        n_centers = np.zeros((k, 512))
+    else:
+        n_centers = np.zeros((k, 40))
+
 
     # Read the SCP file
     with open(SCP_FILE, 'rb') as scp_file:
@@ -101,23 +109,34 @@ for e in range(EPOCH):
                 if start:
                     centers = np.array(random.sample(list(utt_mat), k))  # k=4
                     start = False
-                    print(centers.shape)
+                    print(centers.shape, d_centers.shape, n_centers.shape)
 
                 # Assign data to clusters
                 assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
 
                 # Record data information
+                for c in range(k):
+                    for i in range(utt_mat.shape[0]):
+                        if assigns[i][0] == c:
+                            n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
+                            d_centers[c] += 1
 
-                # Update centers
-                for c_index in range(k):  # k=4
-                    data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
-                    # print(data_in_c.shape)
-                    if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
-                        centers[c_index] = np.mean(data_in_c, axis=0)
+
+                # # Update centers
+                # for c_index in range(k):  # k=4
+                #     data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
+                #     # print(data_in_c.shape)
+                #     if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
+                #         centers[c_index] = np.mean(data_in_c, axis=0)
 
                 # Calculate the clustering loss
-                assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
                 epoch_error += np.sum(assigns, axis=0)[1]
+
+        # After iterate the whole file
+        # update the centers
+        for c in range(k):
+            if d_centers[c] > 0:
+                centers[c] = n_centers[c] / d_centers[c]
 
     end = time.time()
     print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), epoch_error, (end-tmp)))
