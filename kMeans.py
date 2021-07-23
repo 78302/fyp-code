@@ -91,7 +91,7 @@ for e in range(EPOCH):
     # Read the SCP file
     with open(SCP_FILE, 'rb') as scp_file:
         lines = scp_file.readlines()
-        for line in lines[:10]:  # remove [:K]
+        for line in lines:  # remove [:K]
             tempt = str(line).split()[1]
             file_loc = tempt.split(':')[0][C:]
             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
