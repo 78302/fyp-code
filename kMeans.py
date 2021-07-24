@@ -115,11 +115,17 @@ for e in range(EPOCH):
                 assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
 
                 # Record data information
-                for c in range(k):
-                    for i in range(utt_mat.shape[0]):
-                        if assigns[i][0] == c:
-                            n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
-                            d_centers[c] += 1
+                for i in range(utt_mat.shape[0]):
+                    c = assigns[i][0]
+                    n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
+                    d_centers[c] += 1
+
+
+                # for c in range(k):
+                #     for i in range():
+                #         if assigns[i][0] == c:
+                #             n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
+                #             d_centers[c] += 1
 
 
                 # # Update centers
@@ -129,8 +135,8 @@ for e in range(EPOCH):
                 #     if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
                 #         centers[c_index] = np.mean(data_in_c, axis=0)
 
-                # Calculate the clustering loss
-                epoch_error += np.sum(assigns, axis=0)[1]
+        # Calculate the clustering loss
+        epoch_error += np.sum(assigns, axis=0)[1] / np.sum(d_centers)
 
         # After iterate the whole file
         # update the centers
@@ -151,7 +157,7 @@ for e in range(EPOCH):
 
     # Judge whether it can be free from the loop
     if temp:
-        if int(temp) == int(epoch_error):
+        if temp = epoch_error:
             break
     temp = epoch_error
 
