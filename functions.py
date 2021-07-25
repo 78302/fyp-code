@@ -23,9 +23,9 @@ def eu_distance(a, b):
     :param b: End Point
     :return: Euclidean Distance
     """
-    dist = np.sqrt(np.sum(np.square(a - b)))
+    # dist = np.sqrt(np.sum(np.square(a - b))
     # np.linalg.norm(a - b)  # numpy function can replace the above
-    return dist
+    return np.linalg.norm(a - b)
 
 
 def assign_cluster(datapoint, centers):
@@ -71,15 +71,50 @@ def pretrain_representations(pretrain_path, data):
 
 if __name__ == '__main__':
 
-    from classifier import classification_net
-    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
+    a = np.array([[1, 2], [1, 2], [1, 2], [1, 2], [1, 2]])
 
-    classifier = classification_net(INPUT_SIZE=512, HIDDEN_SIZE=512, OUTPUT_SIZE=43, PRETRAIN_PATH='./pretrain_model/model/Epoch50.pth.tar').to(DEVICE)
-    print(classifier)
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, classifier.parameters()), lr=0.001)  # optimize all require grad's parameters
+    b = np.array([[2, 4], [2, 4], [1, 2]])
 
-    path = './model_classifier/Epoch1_test-up-lr0001.pth.tar'
-    classifier, optimizer = load_model(path, classifier, optimizer) # load the model
+    print(eu_distance(a, b))
+
+    # SCP_FILE = './data/si284-0.9-train.fbank.scp'  # scp file path under Ubuntu environment
+    # UTT_RELATIVE_PATH = './data/'  # relative path of ark file under Ubuntu environment
+    # C = 24  # cutting position to divide the list
+    #
+    # # Read the SCP file
+    # with open(SCP_FILE, 'rb') as scp_file:
+    #     lines = scp_file.readlines()
+    #     for line in lines[:1]:  # remove [:K]
+    #         tempt = str(line).split()[1]
+    #         file_loc = tempt.split(':')[0][C:]
+    #         pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
+    #
+    #         # Read the ark file to get utterance
+    #         with open(UTT_RELATIVE_PATH + file_loc, 'rb') as ark_file:
+    #             ark_file.seek(int(pointer))
+    #             utt_mat = kaldiark.parse_feat_matrix(ark_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # from classifier import classification_net
+    # DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
+    #
+    # classifier = classification_net(INPUT_SIZE=512, HIDDEN_SIZE=512, OUTPUT_SIZE=43, PRETRAIN_PATH='./pretrain_model/model/Epoch50.pth.tar').to(DEVICE)
+    # print(classifier)
+    # optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, classifier.parameters()), lr=0.001)  # optimize all require grad's parameters
+    #
+    # path = './model_classifier/Epoch1_test-up-lr0001.pth.tar'
+    # classifier, optimizer = load_model(path, classifier, optimizer) # load the model
 
     # rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=512, LAYERS=4)
     # optimizer_pretrain = torch.optim.Adam(rnn_pretrain_model.parameters(), lr=0.001)  # just attach but no use

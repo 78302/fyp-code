@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(description='Parse the net paras')
 parser.add_argument('--name', '-n', help='Name of the Model, required', required=True)
 parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=1)
 parser.add_argument('--type', '-t', help='Ubuntu type or mlp type, not required default is Ubuntu type', type=int,  default=1)
-parser.add_argument('--cluster_number', '-k', help='The largest number of clusters, not required', type=int,  default=43)
+parser.add_argument('--cluster_number', '-k', help='The largest number of clusters, not required', type=int,  default=10)
 parser.add_argument('--model_path', '-p', help='Path of the pre-trained model, not required', default=None)  # model path: './pretrain_model/model/Epoch50.pth.tar'
 # required=True
 args = parser.parse_args()
@@ -29,6 +29,7 @@ EPOCH = args.epoch
 TYPE = args.type
 K = args.cluster_number
 PRETRAIN_PATH = args.model_path
+
 
 # Decide the file path under different environment
 # Python do not have switch case, use if else instead
@@ -41,10 +42,8 @@ else:
     UTT_RELATIVE_PATH = '../remote/data'
     C = 14
 
-# print(NAME, EPOCH, TYPE, K, SCP_FILE, UTT_RELATIVE_PATH, C)
-# exit()
 
-random.seed(100)
+np.random.seed(100)
 start = False
 
 import time
@@ -53,117 +52,287 @@ tmp = start_time
 
 epochs = 0
 temp = None
+start = True
 k=K
-
 
 # Load ceters and loss
 import csv
-try:
-    centers = np.load(NAME + '_centers.npy')
-    with open(NAME + '_result.csv', 'r') as csv_file:
-        interm_data = []
-        csvreader = csv.reader(csv_file)
-        for l in csvreader:
-            interm_data.append(l)
-        if len(interm_data) > 0 and int(interm_data[-1][0]) == k:  # not empty, load the loss
-            temp = float(interm_data[-1][2])
-        else:  # Need to initialize centers
-            start = True
-
-except: # Need to initialize centers
-    start = True
-
-
-# Start Kmeans procedure
-
-
 
 for e in range(EPOCH):
-    epoch_error = 0
 
+    error = 0
     d_centers = np.zeros(k)
     if PRETRAIN_PATH:
         n_centers = np.zeros((k, 512))
     else:
         n_centers = np.zeros((k, 40))
 
-
-    # Read the SCP file
     with open(SCP_FILE, 'rb') as scp_file:
         lines = scp_file.readlines()
-        for line in lines:  # remove [:K]
+        # for utterance in the file
+        for line in lines[:10]:  # use 2 for test
             tempt = str(line).split()[1]
             file_loc = tempt.split(':')[0][C:]
             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
 
-            # Read the ark file to get utterance
             with open(UTT_RELATIVE_PATH + file_loc, 'rb') as ark_file:
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
-                # Use model to get representations
-                if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
-                    utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
+            # Use pretrain model to get representations
+            if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
+                utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
 
-                # Init centers: randomly pick k data from data set as centers
-                if start:
-                    centers = np.array(random.sample(list(utt_mat), k))  # k=4
-                    start = False
-                    print(centers.shape, d_centers.shape, n_centers.shape)
+            # Init centers:
+            # randomly pick k data from data set as centers
+            if start:
+                # if k <= utt_mat.shape[0]:
+                #     centers = np.array(random.sample(list(utt_mat), k))  # k=4
+                # else:
+                u_max = np.max(utt_mat,axis=0)
+                u_min = np.min(utt_mat,axis=0)
+                # print(u_max.shape)
 
-                # Assign data to clusters
-                assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+                centers = np.random.rand(k, utt_mat.shape[1])
+                centers = (u_max - u_min) * centers + u_min
 
-                # Record data information
-                for i in range(utt_mat.shape[0]):
-                    c = assigns[i][0]
-                    n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
-                    d_centers[c] += 1
+                start = False
+                print(centers.shape)
 
+            # Assign centers to the utterance
+            assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+            error += np.sum(assigns, axis=0)[1]
+            # print(error)
 
-                # for c in range(k):
-                #     for i in range():
-                #         if assigns[i][0] == c:
-                #             n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
-                #             d_centers[c] += 1
+            # Record number of frames and f information
+            for i in range(utt_mat.shape[0]):
+                c = int(assigns[i][0])
+                # n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
+                n_centers[c] += utt_mat[i]
+                d_centers[c] += 1
 
+        # print(n_centers.shape)
+        # print(d_centers)
 
-                # # Update centers
-                # for c_index in range(k):  # k=4
-                #     data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
-                #     # print(data_in_c.shape)
-                #     if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
-                #         centers[c_index] = np.mean(data_in_c, axis=0)
-
-        # Calculate the clustering loss
-        epoch_error += np.sum(assigns, axis=0)[1] / np.sum(d_centers)
-
-        # After iterate the whole file
-        # update the centers
+        # Update Centers
         for c in range(k):
             if d_centers[c] > 0:
                 centers[c] = n_centers[c] / d_centers[c]
 
-    end = time.time()
-    print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), epoch_error, (end-tmp)))
-    tmp = end
-    epochs += 1
+        end = time.time()
+        error = error / np.sum(d_centers)
+        print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), error, (end-tmp)))
+        tmp = end
 
-    # write to the csv file for each epoch
-    np.save(NAME + '_centers.npy', centers)
-    with open(NAME + '_result.csv', 'a+') as csv_file:
-        csvwriter = csv.writer(csv_file)
-        csvwriter.writerow([k, epochs, epoch_error])
-
-    # Judge whether it can be free from the loop
-    if temp:
-        if temp = epoch_error:
-            break
-    temp = epoch_error
-
-print("{:d} clusters, final loss is {:0.7f}, costs {:0.7f} seconds".format(k, epoch_error, (end-start_time)))
+        # write to the csv file for each epoch
+        with open(NAME + '_result.csv', 'a+') as csv_file:
+            csvwriter = csv.writer(csv_file)
+            csvwriter.writerow([k, epochs+1, error])
+        epochs += 1
+print("{:d} clusters, final loss is {:0.7f}, costs {:0.7f} seconds".format(k, error, (end-start_time)))
 
 
+
+
+
+
+# # Implementation of K-means
+# import torch
+# import torch.nn as nn
+# import numpy as np
+#
+# import kaldiark
+# from apc import toy_lstm
+# import glob
+# import matplotlib.pyplot as plt
+# from functions import assign_cluster, pretrain_representations
+# import random
+#
+# # Load kmeans paras
+# import argparse
+# # Deal with the use input parameters
+# # ideal input: name, epoch, K, pretrain_model_path, hidden-size, train-scp-path, dev-scp-path, layers
+# parser = argparse.ArgumentParser(description='Parse the net paras')
+# parser.add_argument('--name', '-n', help='Name of the Model, required', required=True)
+# parser.add_argument('--epoch', '-e', help='Epoch, not required', type=int, default=1)
+# parser.add_argument('--type', '-t', help='Ubuntu type or mlp type, not required default is Ubuntu type', type=int,  default=1)
+# parser.add_argument('--cluster_number', '-k', help='The largest number of clusters, not required', type=int,  default=43)
+# parser.add_argument('--model_path', '-p', help='Path of the pre-trained model, not required', default=None)  # model path: './pretrain_model/model/Epoch50.pth.tar'
+# # required=True
+# args = parser.parse_args()
+#
+# # Assign parameters
+# NAME = args.name
+# EPOCH = args.epoch
+# TYPE = args.type
+# K = args.cluster_number
+# PRETRAIN_PATH = args.model_path
+#
+# # Decide the file path under different environment
+# # Python do not have switch case, use if else instead
+# if TYPE == 1:  # under Ubbuntu test environment
+#     SCP_FILE = './data/si284-0.9-train.fbank.scp'  # scp file path under Ubuntu environment
+#     UTT_RELATIVE_PATH = './data/'  # relative path of ark file under Ubuntu environment
+#     C = 24  # cutting position to divide the list
+# else:
+#     SCP_FILE = '../remote/data/wsj/extra/si284-0.9-train.fbank.scp'
+#     UTT_RELATIVE_PATH = '../remote/data'
+#     C = 14
+#
+# # print(NAME, EPOCH, TYPE, K, SCP_FILE, UTT_RELATIVE_PATH, C)
+# # exit()
+#
+# random.seed(100)
+# start = False
+#
+# import time
+# start_time = time.time()
+# tmp = start_time
+#
+# epochs = 0
+# temp = None
+# k=K
+#
+#
+# # Load ceters and loss
+# import csv
+# try:
+#     centers = np.load(NAME + '_centers.npy')
+#     if centers.shape[0] != k:
+#         start = True
+#     with open(NAME + '_result.csv', 'r') as csv_file:
+#         interm_data = []
+#         csvreader = csv.reader(csv_file)
+#         for l in csvreader:
+#             interm_data.append(l)
+#         if len(interm_data) > 0 and int(interm_data[-1][0]) == k:  # not empty, load the loss
+#             temp = float(interm_data[-1][2])
+#         else:  # Need to initialize centers
+#             start = True
+#
+# except: # Need to initialize centers
+#     start = True
+#
+# print(start)
+#
+# # Start Kmeans procedure
+#
+#
+#
+# for e in range(EPOCH):
+#     epoch_error = 0
+#
+#     d_centers = np.zeros(k)
+#     if PRETRAIN_PATH:
+#         n_centers = np.zeros((k, 512))
+#     else:
+#         n_centers = np.zeros((k, 40))
+#
+#
+#     # Read the SCP file
+#     with open(SCP_FILE, 'rb') as scp_file:
+#         lines = scp_file.readlines()
+#         for line in lines[:1]:  # remove [:K]
+#             tempt = str(line).split()[1]
+#             file_loc = tempt.split(':')[0][C:]
+#             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
+#
+#             # Read the ark file to get utterance
+#             with open(UTT_RELATIVE_PATH + file_loc, 'rb') as ark_file:
+#                 ark_file.seek(int(pointer))
+#                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
+#
+#                 # Use model to get representations
+#                 if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
+#                     utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
+#
+#                 # Init centers: randomly pick k data from data set as centers
+#                 if start:
+#
+#                     if k <= utt_mat.shape[0]:
+#                         centers = np.array(random.sample(list(utt_mat), k))  # k=4
+#                     else:
+#                         u_max = np.max(utt_mat,axis=0)
+#                         u_min = np.min(utt_mat,axis=0)
+#
+#                         centers = np.random.rand(k, utt_mat.shape[1])
+#                         centers = (u_max - u_min) * centers + u_min
+#
+#                     start = False
+#                     # print(centers)
+#                     print(centers.shape, d_centers.shape, n_centers.shape)
+#
+#                 # Assign data to clusters
+#                 assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
+#
+#                 # Record data information
+#                 # count = 0
+#                 for i in range(utt_mat.shape[0]):
+#                     c = int(assigns[i][0])
+#                     # print(c)
+#                     # print(utt_mat[i][:2])
+#                     # print(n_centers[c][:2], d_centers[c])
+#                     # n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
+#
+#                     n_centers[c] += utt_mat[i]
+#                     d_centers[c] += 1
+#
+#                     # count += 1
+#                     # if count == 6:
+#                     #     break
+#
+#                 # print(n_centers, d_centers)
+#
+#
+#
+#
+#                 # for c in range(k):
+#                 #     for i in range():
+#                 #         if assigns[i][0] == c:
+#                 #             n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
+#                 #             d_centers[c] += 1
+#
+#
+#                 # # Update centers
+#                 # for c_index in range(k):  # k=4
+#                 #     data_in_c = np.array([utt_mat[i] for i in range(utt_mat.shape[0]) if assigns[i][0] == c_index])
+#                 #     # print(data_in_c.shape)
+#                 #     if data_in_c.shape[0] > 0:  # some clusters may not have assigned data points
+#                 #         centers[c_index] = np.mean(data_in_c, axis=0)
+#
+#         # Calculate the clustering loss
+#         epoch_error += np.sum(assigns, axis=0)[1]
+#
+#         # After iterate the whole file
+#         # update the centers
+#         for c in range(k):
+#             if d_centers[c] > 0:
+#                 print(centers[c][:2], n_centers[c][:2], d_centers[c])
+#                 centers[c] = n_centers[c] / d_centers[c]
+#                 print(centers[c][:2])
+#         # print(d_centers, n_centers)
+#
+#     end = time.time()
+#     print("Epoch {:d} error: {:0.7f}, use {:0.7f} seconds.".format((epochs+1), epoch_error / np.sum(d_centers), (end-tmp)))
+#     epoch_error = epoch_error / np.sum(d_centers)
+#     tmp = end
+#     epochs += 1
+#
+#     # write to the csv file for each epoch
+#     np.save(NAME + '_centers.npy', centers)
+#     with open(NAME + '_result.csv', 'a+') as csv_file:
+#         csvwriter = csv.writer(csv_file)
+#         csvwriter.writerow([k, epochs, epoch_error])
+#
+#     # Judge whether it can be free from the loop
+#     if temp:
+#         if temp == epoch_error:
+#             break
+#     temp = epoch_error
+#
+# print("{:d} clusters, final loss is {:0.7f}, costs {:0.7f} seconds".format(k, epoch_error, (end-start_time)))
+#
+#
 
 
 '''
