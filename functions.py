@@ -40,6 +40,10 @@ def assign_cluster(datapoint, centers):
     dist = np.min(dists)
     return c_index, dist
 
+def closest_centroid(points, centroids):
+	distances = np.sqrt(((points - centroids[:, np.newaxis])**2).sum(axis=2)) # 计算欧氏距离
+	return np.argmin(distances, axis=0), np.min(distances, axis=0)
+
 
 def pretrain_representations(pretrain_path, data):
     """
@@ -75,7 +79,7 @@ if __name__ == '__main__':
 
     b = np.array([[2, 4], [2, 4], [1, 2]])
 
-    print(eu_distance(a, b))
+    print(closest_centroid(a, b))
 
     # SCP_FILE = './data/si284-0.9-train.fbank.scp'  # scp file path under Ubuntu environment
     # UTT_RELATIVE_PATH = './data/'  # relative path of ark file under Ubuntu environment

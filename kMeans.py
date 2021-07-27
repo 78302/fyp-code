@@ -7,7 +7,7 @@ import kaldiark
 from apc import toy_lstm
 import glob
 import matplotlib.pyplot as plt
-from functions import assign_cluster, pretrain_representations
+from functions import assign_cluster, pretrain_representations, closest_centroid
 import random
 
 # Load kmeans paras
@@ -55,12 +55,15 @@ temp = None
 start = True
 k=K
 
+
 # Load ceters and loss
 import csv
 
 for e in range(EPOCH):
 
     error = 0
+    # assign_time = 0
+    # record_time = 0
     d_centers = np.zeros(k)
     if PRETRAIN_PATH:
         n_centers = np.zeros((k, 512))
@@ -70,7 +73,7 @@ for e in range(EPOCH):
     with open(SCP_FILE, 'rb') as scp_file:
         lines = scp_file.readlines()
         # for utterance in the file
-        for line in lines:  # use 2 for test
+        for line in lines[:100]:  # use 2 for test
             tempt = str(line).split()[1]
             file_loc = tempt.split(':')[0][C:]
             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
@@ -100,16 +103,22 @@ for e in range(EPOCH):
                 print(centers.shape)
 
             # Assign centers to the utterance
-            assigns = np.array([assign_cluster(datapoint, centers) for datapoint in utt_mat])
-            error += np.sum(assigns, axis=0)[1]
+            assigns, errors = closest_centroid(utt_mat, centers)
+            # end = time.time()
+            # assign_time += end-tmp
+            # tmp = end
+            error += np.sum(errors)
             # print(error)
 
             # Record number of frames and f information
             for i in range(utt_mat.shape[0]):
-                c = int(assigns[i][0])
+                c = int(assigns[i])
                 # n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
                 n_centers[c] += utt_mat[i]
                 d_centers[c] += 1
+            # end = time.time()
+            # record_time += end-tmp
+            # tmp = end
 
         # print(n_centers.shape)
         # print(d_centers)
