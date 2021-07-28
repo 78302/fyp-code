@@ -44,7 +44,6 @@ else:
 
 
 np.random.seed(100)
-start = False
 
 import time
 start_time = time.time()

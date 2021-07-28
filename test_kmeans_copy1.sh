@@ -24,7 +24,7 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 # ls msc/fyp-code/
 cd msc/fyp-code/
 # python3 run_apc.py
-python3 kMeans.py -n 'test_km_raw' -e 1 -t 0 -k $1 > job_kmeans_test_raw_k$1.out
+python3 kMeans.py -n 'km_raw' -e 10 -t 0 -k $1 > job_kmeans_raw_k$1.out
 
 # Unmount it
 cd /
