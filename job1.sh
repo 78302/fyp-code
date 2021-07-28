@@ -24,7 +24,7 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 # ls msc/fyp-code/
 cd msc/fyp-code/
 # python3 run_apc.py
-python3 run_apc.py -n 'WSJ_APC_lr0001' -lr 0.001 -t 0 -o $1> job_apc_epoch$1.out
+python3 run_apc.py -n 'WSJ_APC_lr0001' -lr 0.0001 -t 0 -o $1> job_apc_epoch$1.out
 # echo 'Model pretrained!'
 
 
