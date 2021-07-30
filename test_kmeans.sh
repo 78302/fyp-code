@@ -9,26 +9,11 @@
 # Back to the source folder: home/s2051012
 cd /
 cd /home/s2051012
-# Activate the env?
 . msc/toolchain.rc
 . msc/venv/bin/activate
-
-# ls
-
-# Mount the shared file
 sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /home/s2051012/msc/remote
-# echo 'Successfully mounted the share file under remote folder!'
-# ls msc/remote/
-
-# Run the code
-# ls msc/fyp-code/
 cd msc/fyp-code/
-# python3 run_apc.py
-# python3 kMeans.py -n 'test_km_raw' -e 1 -l 0 -k 50 -s './data/raw_fbank_train_si284.scp' > job_kmeans_test_raw_0_e1_k50.out
-python3 kMeans.py -n 'test_km_pre' -e 1 -k 1 -p './pretrain_model/model/Epoch50.pth.tar' -s './data/raw_fbank_train_si284.scp' > job_kmeans_pretrainInput_0_e1_k1.out
-# echo 'Model pretrained!'
-
-# Unmount it
+python3 testKM.py -n 'test_pre' -e 1 -t 0 -p './pretrain_model/model/Epoch50.pth.tar' -k $1 > job_kmeans_test_pre_k$1.out
 cd /
 cd /home/s2051012
 fusermount -u msc/remote
