@@ -81,9 +81,16 @@ for e in range(EPOCH):
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
+            end = time.time()
+            tmp = end
+
             # Use pretrain model to get representations
             if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
                 utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
+
+            end = time.time()
+            print('transfer to rep: {:0.7f}'.format(end-tmp))
+            tmp = end
 
             # Init centers:
             # randomly pick k data from data set as centers
@@ -103,9 +110,9 @@ for e in range(EPOCH):
 
             # Assign centers to the utterance
             assigns, errors = closest_centroid(utt_mat, centers)
-            # end = time.time()
-            # assign_time += end-tmp
-            # tmp = end
+            end = time.time()
+            print('assign: {:0.7f}'.format(end-tmp))
+            tmp = end
             error += np.sum(errors)
             # print(error)
 
@@ -115,9 +122,9 @@ for e in range(EPOCH):
                 # n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
                 n_centers[c] += utt_mat[i]
                 d_centers[c] += 1
-            # end = time.time()
-            # record_time += end-tmp
-            # tmp = end
+            end = time.time()
+            print('record: {:0.7f}'.format(end-tmp))
+            tmp = end
 
         # print(n_centers.shape)
         # print(d_centers)
