@@ -72,7 +72,7 @@ for e in range(EPOCH):
     with open(SCP_FILE, 'rb') as scp_file:
         lines = scp_file.readlines()
         # for utterance in the file
-        for line in lines[:10]:  # use 2 for test
+        for line in lines:  # use 2 for test
             tempt = str(line).split()[1]
             file_loc = tempt.split(':')[0][C:]
             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
@@ -88,9 +88,9 @@ for e in range(EPOCH):
             if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
                 utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
 
-            end = time.time()
-            print('transfer to rep: {:0.7f}'.format(end-tmp))
-            tmp = end
+            # end = time.time()
+            # print('transfer to rep: {:0.7f}'.format(end-tmp))
+            # tmp = end
 
             # Init centers:
             # randomly pick k data from data set as centers
@@ -110,9 +110,9 @@ for e in range(EPOCH):
 
             # Assign centers to the utterance
             assigns, errors = closest_centroid(utt_mat, centers)
-            end = time.time()
-            print('assign: {:0.7f}'.format(end-tmp))
-            tmp = end
+            # end = time.time()
+            # print('assign: {:0.7f}'.format(end-tmp))
+            # tmp = end
             error += np.sum(errors)
             # print(error)
 
@@ -122,9 +122,9 @@ for e in range(EPOCH):
                 # n_centers[c] = d_centers[c]/(d_centers[c]+1) * n_centers[c] + 1/(d_centers[c]+1) * utt_mat[i]
                 n_centers[c] += utt_mat[i]
                 d_centers[c] += 1
-            end = time.time()
-            print('record: {:0.7f}'.format(end-tmp))
-            tmp = end
+            # end = time.time()
+            # print('record: {:0.7f}'.format(end-tmp))
+            # tmp = end
 
         # print(n_centers.shape)
         # print(d_centers)
