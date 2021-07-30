@@ -13,7 +13,7 @@ cd /home/s2051012
 . msc/venv/bin/activate
 sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /home/s2051012/msc/remote
 cd msc/fyp-code/
-python3 testKM.py -n 'test_pre' -e 1 -t 0 -p './pretrain_model/model/Epoch50.pth.tar' -k $1 > job_kmeans_test_pre_k$1.out
+python3 testKM.py -n 'test_pre' -e 1 -t 0 -p './pretrain_model/model/Epoch50.pth.tar' -k $1 > job_pre_k$1.out
 cd /
 cd /home/s2051012
 fusermount -u msc/remote
