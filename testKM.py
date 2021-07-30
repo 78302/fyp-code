@@ -54,6 +54,10 @@ temp = None
 start = True
 k=K
 
+# Load model:
+if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
+    apc = pretrain_representations(PRETRAIN_PATH)
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Load ceters and loss
 import csv
@@ -82,15 +86,19 @@ for e in range(EPOCH):
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
             end = time.time()
-            tmp = end
-
-            # Use pretrain model to get representations
-            if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
-                utt_mat = pretrain_representations(PRETRAIN_PATH, utt_mat)
-
-            # end = time.time()
             # print('transfer to rep: {:0.7f}'.format(end-tmp))
-            # tmp = end
+            tmp = end
+            # Use pretrain model to get representations
+            if PRETRAIN_PATH:
+                utt_mat = torch.Tensor(utt_mat).to(DEVICE)
+                utt_mat = torch.unsqueeze(utt_mat, 0)
+                rep, states = apc(utt_mat)
+                rep = rep.cpu()
+                utt_mat = rep.detach().numpy()[0]
+
+            end = time.time()
+            print('transfer to rep: {:0.7f}'.format(end-tmp))
+            tmp = end
 
             # Init centers:
             # randomly pick k data from data set as centers
