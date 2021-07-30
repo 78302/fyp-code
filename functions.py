@@ -45,12 +45,11 @@ def closest_centroid(points, centroids):
 	return np.argmin(distances, axis=0), np.min(distances, axis=0)
 
 
-def pretrain_representations(pretrain_path, data):
+def pretrain_representations(pretrain_path):
     """
     Get the representation through a pretrain model
     :param    pretrain_path: pretrain model file path
-    :param    data         : utterance needs transforming
-    :return   rep          : transformed representation according to the data
+    :return   model        : pretrained model
     """
 
     # Import the pretrain model
@@ -63,14 +62,9 @@ def pretrain_representations(pretrain_path, data):
     pre_train_model = nn.Sequential(*list(rnn_pretrain_model.children())[:1]).to(DEVICE)  # only take the LSTM part
     pre_train_model.eval()
 #     print(pre_train_model)
+    return pre_train_model
 
-    data = torch.Tensor(data).to(DEVICE)
 
-    data = torch.unsqueeze(data, 0)
-    result, states = pre_train_model(data)
-    result = result.cpu()
-    rep = result.detach().numpy()[0]
-    return rep
 
 
 if __name__ == '__main__':
