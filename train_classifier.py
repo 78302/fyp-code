@@ -110,7 +110,7 @@ for i in range(EPOCH):
     train_total = 0
     with open(TRAIN_LABEL_SCP_PATH, 'rb') as scp_file:
         bpali_lines = scp_file.readlines()
-        for idx,line in enumerate(bpali_lines[:10]):  # [:K]
+        for idx,line in enumerate(bpali_lines):  # [:K]
             # Find the label
             temp = str(line).split()[1]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the label
@@ -168,7 +168,7 @@ for i in range(EPOCH):
     dev_total = 0
     with open(DEV_LABEL_SCP_PATH, 'rb') as scp_file:
         bpali_lines = scp_file.readlines()
-        for didx,line in enumerate(bpali_lines[:5]):  # [:K//2]
+        for didx,line in enumerate(bpali_lines):  # [:K//2]
             # Find the label
             temp = str(line).split()[1]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the label
