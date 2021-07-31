@@ -26,7 +26,7 @@ cd msc/fyp-code/
 # train classifier one by one
 # python3 run_classifier.py -n 'LC_raw_lr0001' -lr 0.001 -is 40 -t 0 -o $1 > job_classifier_raw_lr0001_epoch$1.out
 # train classifier 20 together
-python3 train_classifier.py -n 'LC_raw_lr0001' -lr 0.001 -is 40 -t 0 -o $1 > job_classifier_raw.out
+python3 train_classifier.py -n 'LC_raw_lr0001' -lr 0.001 -is 40 -t 0 > job_classifier_raw.out
 
 
 # Unmount it
