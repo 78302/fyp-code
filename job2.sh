@@ -10,13 +10,13 @@
 cd /
 cd /home/s2051012
 # Activate the env?
-. msc/toolchain.rc 
-. msc/venv/bin/activate 
+. msc/toolchain.rc
+. msc/venv/bin/activate
 
 # ls
 
 # Mount the shared file
-sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /home/s2051012/msc/remote 
+sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /home/s2051012/msc/remote
 # echo 'Successfully mounted the share file under remote folder!'
 # ls msc/remote/
 
@@ -24,13 +24,13 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 # ls msc/fyp-code/
 cd msc/fyp-code/
 # python3 run_apc.py
-python3 run.py > job2.out
+python3 train_apc.py -n 'WSJ_APC_50epochs' -lr 0.001 -t 0> job_train_apc.out
 # echo 'Model pretrained!'
 
 
-# Unmount it 
+# Unmount it
 cd /
 cd /home/s2051012
-fusermount -u msc/remote 
+fusermount -u msc/remote
 # echo 'Successfully unmounted!'
 # ls msc/remote/
