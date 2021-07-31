@@ -42,12 +42,12 @@ if TYPE == 1:  # under Ubbuntu test environment
     TRAIN_SCP_PATH = './data/raw_fbank_train_si284.1.scp'
     DEV_SCP_PATH = './data/raw_fbank_train_si284.1.scp'
     UTT_RELATIVE_PATH = './data'  # relative path of ark file under Ubuntu environment
-    C = 24  # cutting position to divide the list
+    C = 28  # cutting position to divide the list
 else:
     TRAIN_SCP_PATH = '../remote/data/wsj/extra/si284-0.9-train.fbank.scp'
     DEV_SCP_PATH = '../remote/data/wsj/extra/si284-0.9-dev.fbank.scp'
     UTT_RELATIVE_PATH = '../remote/data'
-    C = 14
+    C = 18
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  #
@@ -100,7 +100,7 @@ for i in range(EPOCH):
             temp = str(line).split()[1]
             file_loc = temp.split(':')[0][C:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-            # print(file_loc, pointer)
+            # print(file_loc)
 
             # According to the file name and pointer to get the matrix
             with open(UTT_RELATIVE_PATH + file_loc, 'rb') as ark_file:
