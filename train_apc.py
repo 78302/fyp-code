@@ -55,9 +55,7 @@ rnn = toy_lstm(INPUT_SIZE=INPUT_SIZE, HIDDEN_SIZE=HIDDEN_SIZE, LAYERS=LAYERS).to
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
 # Learning rate decay schedule
 mult_step_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                           milestones=[EPOCH // 2, EPOCH // 4 * 3], gamma=0.5)
-
-optimizer = torch.optim.Adam(rnn.parameters(), lr=LEARNING_RATE)  # optimize all parameters
+                                                           milestones=[EPOCH // 2, EPOCH // 4 * 3], gamma=0.1)
 
 # from functions import load_model
 # if ORDER != 1:  # load the previous model
@@ -96,11 +94,11 @@ for i in range(EPOCH):
     # Read data index from the total scp file
     with open(TRAIN_SCP_PATH, 'rb') as scp_file:
         lines = scp_file.readlines()
-        for line in lines:
+        for line in lines[:3]:
             temp = str(line).split()[1]
             file_loc = temp.split(':')[0][C:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
-            print(file_loc, temp.split(':')[0][14:])
+            # print(file_loc, temp.split(':')[0][14:])
 
             # According to the file name and pointer to get the matrix
             with open(UTT_RELATIVE_PATH + file_loc, 'rb') as ark_file:
@@ -132,7 +130,7 @@ for i in range(EPOCH):
         # test file path: ./data/raw_fbank_train_si284.2.scp
         # win file path: ./data/raw_fbank_train_si284.2.scp
         lines = scp_file.readlines()
-        for line in lines:
+        for line in lines[:3]:
             temp = str(line).split()[1]
             file_loc = temp.split(':')[0][C:]
             # ark file path; keep [18:]
@@ -191,3 +189,25 @@ print(end-start)
 
 # Save the train loss into npy
 np.save(NAME + '_losses.npy', losses)
+
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+# Load _losses
+losses = np.load(NAME + '_losses.npy')
+
+y_t = losses[0]
+y_d = losses[1]
+x = np.arange(1,EPOCH+1)
+fig, ax = plt.subplots(figsize=(14,7))
+ax.plot(x,y_t,'r',label='Train Loss')
+ax.plot(x,y_d,'b',label='Dev Loss')
+
+ax.set_title('Loss',fontsize=18)
+ax.set_xlabel('epoch', fontsize=18,fontfamily = 'sans-serif',fontstyle='italic')
+ax.set_ylabel('loss', fontsize='x-large',fontstyle='oblique')
+ax.legend()
+
+plt.savefig("{:s}_apc_loss.pdf".format(NAME))
