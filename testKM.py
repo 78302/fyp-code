@@ -87,9 +87,9 @@ for e in range(EPOCH):
                 ark_file.seek(int(pointer))
                 utt_mat = kaldiark.parse_feat_matrix(ark_file)
 
-            # end = time.time()
-            # # print('transfer to rep: {:0.7f}'.format(end-tmp))
-            # tmp = end
+            end = time.time()
+            # print('transfer to rep: {:0.7f}'.format(end-tmp))
+            tmp = end
             # Use pretrain model to get representations
             if PRETRAIN_PATH:
                 utt_mat = torch.Tensor(utt_mat).to(DEVICE)
@@ -98,9 +98,9 @@ for e in range(EPOCH):
                 rep = rep.cpu()
                 utt_mat = rep.detach().numpy()[0]
 
-            # end = time.time()
-            # print('transfer to rep: {:0.7f}'.format(end-tmp))
-            # tmp = end
+            end = time.time()
+            print('transfer to rep: {:0.7f}'.format(end-tmp))
+            tmp = end
 
             # Init centers:
             # randomly pick k data from data set as centers
