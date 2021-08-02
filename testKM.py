@@ -35,7 +35,7 @@ PRETRAIN_PATH = args.model_path
 # Python do not have switch case, use if else instead
 if TYPE == 1:  # under Ubbuntu test environment
     SCP_FILE = './data/si284-0.9-train.fbank.scp'  # scp file path under Ubuntu environment
-    UTT_RELATIVE_PATH = './data/'  # relative path of ark file under Ubuntu environment
+    UTT_RELATIVE_PATH = './data'  # relative path of ark file under Ubuntu environment
     C = 24  # cutting position to divide the list
 else:
     SCP_FILE = '../remote/data/wsj/extra/si284-0.9-train.fbank.scp'
