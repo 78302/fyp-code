@@ -44,6 +44,7 @@ else:
 
 
 np.random.seed(100)
+random.seed(100)
 
 import time
 start_time = time.time()
@@ -75,8 +76,9 @@ for e in range(EPOCH):
 
     with open(SCP_FILE, 'rb') as scp_file:
         lines = scp_file.readlines()
+        random.shuffle(lines)
         # for utterance in the file
-        for line in lines:  # use 2 for test
+        for line in lines[:1000]:  # use 2 for test
             tempt = str(line).split()[1]
             file_loc = tempt.split(':')[0][C:]
             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
