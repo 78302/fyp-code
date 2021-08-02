@@ -1,3 +1,9 @@
+#!/bin/bash
+# Author: Z
+# Version: 1.0
+# Created Time: 2021/07/03
+# Config the running environment of the APC model and train the APC in slurm
+
 cd /
 cd /home/s2051012
 . msc/toolchain.rc
