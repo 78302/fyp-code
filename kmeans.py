@@ -75,9 +75,9 @@ for e in range(EPOCH):
 
     with open(SCP_FILE, 'rb') as scp_file:
         lines = scp_file.readlines()
-        # random.shuffle(lines)
+        random.shuffle(lines)
         # for utterance in the file
-        for line in lines[:10]:  # use 1000 for test
+        for line in lines[:1000]:  # use 1000 for test
             tempt = str(line).split()[1]
             file_loc = tempt.split(':')[0][C:]
             pointer = tempt.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
