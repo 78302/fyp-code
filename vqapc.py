@@ -6,7 +6,8 @@ from torch.autograd import Variable
 
 
 def sample_gumbel(shape, eps=1e-20):
-  U = torch.rand(shape).cuda()
+  device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+  U = torch.rand(shape).to(device)
   return -Variable(torch.log(-torch.log(U + eps) + eps))
 
 
@@ -230,7 +231,7 @@ class toy_vqapc(nn.Module):
             batch_first=True
         )
 
-        self.vq_layers = VQLayer(input_size=HIDDEN_SIZE, hidden_size=-1,
+        self.vq_layer = VQLayer(input_size=HIDDEN_SIZE, hidden_size=-1,
                  codebook_size=512, code_dim=512,
                  gumbel_temperature=0.5)
 
@@ -238,9 +239,11 @@ class toy_vqapc(nn.Module):
         self.h_s = None
         self.h_c = None
 
-    def forward(self, x):
+    def forward(self, x, testing):
         r_out, (h_s, h_c) = self.rnn(x)
-        output = self.fc(r_out)
+
+        logits_BxLxC, rnn_outputs_BxLxH = self.vq_layer(r_out, testing)
+        output = self.fc(rnn_outputs_BxLxH)
         return output
 
 

@@ -94,7 +94,7 @@ for i in range(EPOCH):
     # Read data index from the total scp file
     with open(TRAIN_SCP_PATH, 'rb') as scp_file:
         lines = scp_file.readlines()
-        for line in lines:
+        for line in lines[:2]:
             temp = str(line).split()[1]
             file_loc = temp.split(':')[0][C:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
@@ -108,7 +108,7 @@ for i in range(EPOCH):
                 utt_mat = np.expand_dims(utt_mat, axis=0)  # expand a new dimension as batch
                 utt_mat = torch.Tensor(utt_mat).to(device)  # change data to tensor
 
-                output = rnn(utt_mat[:, :-K, :])
+                output = rnn(utt_mat[:, :-K, :], False)
 
                 #                 print(utt_mat.shape, output.shape)
 
@@ -130,7 +130,7 @@ for i in range(EPOCH):
         # test file path: ./data/raw_fbank_train_si284.2.scp
         # win file path: ./data/raw_fbank_train_si284.2.scp
         lines = scp_file.readlines()
-        for line in lines:
+        for line in lines[:2]:
             temp = str(line).split()[1]
             file_loc = temp.split(':')[0][C:]
             # ark file path; keep [18:]
@@ -146,7 +146,7 @@ for i in range(EPOCH):
                 utt_mat = torch.Tensor(utt_mat).to(device)  # change data to tensor
 
                 with torch.no_grad():
-                    output = rnn(utt_mat[:, :-K, :])  # rnn output
+                    output = rnn(utt_mat[:, :-K, :], True)  # rnn output
 
                 #                     print(utt_mat_mat.shape, output.shape)
 
@@ -188,7 +188,7 @@ print(end-start)
 
 
 # Save the train loss into npy
-np.save(NAME + '_losses.npy', losses)
+np.save(NAME + '_vq_losses.npy', losses)
 
 import numpy as np
 import matplotlib
