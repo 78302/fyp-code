@@ -15,7 +15,7 @@ sshfs -o IdentityFile=/home/s2051012/msc/id_rsa -p 522 msc@129.215.91.172:/ /hom
 cd msc/fyp-code/
 # python3 run_apc.py
 # python3 run_vqapc.py -n 'WSJ_VQAPC_50epochs' -lr 0.001 -e 50 -t 0 > job_train_apc.out
-python3 run_vqapc.py -n 'WSJ_VQAPC_lr0001' -lr 0.001 -e 1 -t 0 -o $1 > job_vqapc_epoch$1.out
+python3 run_vqapc.py -n 'WSJ_VQAPC_lr0001' -lr 0.0001 -e 1 -t 0 -o $1 > job_vqapc_epoch$1.out
 
 
 
