@@ -1,0 +1,12 @@
+(30, 512)
+Epoch 1 error: 1.8808405, use 222.3686469 seconds.
+Epoch 2 error: 0.6337537, use 203.5652978 seconds.
+Epoch 3 error: 0.5357521, use 202.6024413 seconds.
+Epoch 4 error: 0.5198505, use 205.5756435 seconds.
+Epoch 5 error: 0.5112470, use 201.3026171 seconds.
+Epoch 6 error: 0.5067627, use 202.3060710 seconds.
+Epoch 7 error: 0.5023242, use 204.3934891 seconds.
+Epoch 8 error: 0.4967812, use 202.6082234 seconds.
+Epoch 9 error: 0.4912621, use 203.7668440 seconds.
+Epoch 10 error: 0.4914196, use 203.8641651 seconds.
+30 clusters, final loss is 0.4914196, costs 2052.3534393 seconds

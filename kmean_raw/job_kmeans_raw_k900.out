@@ -1,0 +1,12 @@
+(900, 40)
+Epoch 1 error: 29.9065607, use 7288.0422955 seconds.
+Epoch 2 error: 7.9395952, use 7345.4039185 seconds.
+Epoch 3 error: 7.1131377, use 7368.7319758 seconds.
+Epoch 4 error: 6.9247926, use 7411.6191683 seconds.
+Epoch 5 error: 6.8303230, use 7368.7346311 seconds.
+Epoch 6 error: 6.7656219, use 7382.1040883 seconds.
+Epoch 7 error: 6.7144358, use 7369.4071066 seconds.
+Epoch 8 error: 6.6744788, use 7348.2861571 seconds.
+Epoch 9 error: 6.6417209, use 7302.2399993 seconds.
+Epoch 10 error: 6.6133303, use 7312.5953472 seconds.
+900 clusters, final loss is 6.6133303, costs 73497.1646876 seconds

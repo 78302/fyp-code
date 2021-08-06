@@ -1,0 +1,12 @@
+(2000, 512)
+Epoch 1 error: 1.5489625, use 5510.0845275 seconds.
+Epoch 2 error: 0.4453225, use 5437.7384419 seconds.
+Epoch 3 error: 0.3763215, use 5436.0440614 seconds.
+Epoch 4 error: 0.3589759, use 5490.9732726 seconds.
+Epoch 5 error: 0.3510673, use 5348.1391954 seconds.
+Epoch 6 error: 0.3478637, use 5280.2836285 seconds.
+Epoch 7 error: 0.3455453, use 5361.6250095 seconds.
+Epoch 8 error: 0.3395555, use 5391.8525925 seconds.
+Epoch 9 error: 0.3365784, use 5443.3652630 seconds.
+Epoch 10 error: 0.3358432, use 5423.3026736 seconds.
+2000 clusters, final loss is 0.3358432, costs 54123.4086659 seconds
