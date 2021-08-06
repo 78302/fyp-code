@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 
 from functions import load_model
-from apc import toy_lstm
+from vqapc import toy_vqapc
 
 
 class classification_net(torch.nn.Module):
@@ -14,7 +14,7 @@ class classification_net(torch.nn.Module):
         self.OUTPUT_SIZE = OUTPUT_SIZE
 
         if PRETRAIN_PATH:  # use a pretrain model
-            rnn_pretrain_model = toy_lstm(INPUT_SIZE=40, HIDDEN_SIZE=512, LAYERS=4)
+            rnn_pretrain_model = toy_vqapc(INPUT_SIZE=40, HIDDEN_SIZE=512, LAYERS=4) # toy_lstm
             optimizer_pretrain = torch.optim.Adam(rnn_pretrain_model.parameters(), lr=0.001)  # just attach but no use
             rnn_pretrain_model, optimizer_pretrain = load_model(PRETRAIN_PATH, rnn_pretrain_model, optimizer_pretrain) # load the model
             self.pre_train_model = nn.Sequential(*list(rnn_pretrain_model.children())[:-1])  # only take the LSTM part
