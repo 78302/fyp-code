@@ -94,7 +94,7 @@ for i in range(EPOCH):
     # Read data index from the total scp file
     with open(TRAIN_SCP_PATH, 'rb') as scp_file:
         lines = scp_file.readlines()
-        for line in lines[:2]:
+        for line in lines:
             temp = str(line).split()[1]
             file_loc = temp.split(':')[0][C:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
@@ -130,7 +130,7 @@ for i in range(EPOCH):
         # test file path: ./data/raw_fbank_train_si284.2.scp
         # win file path: ./data/raw_fbank_train_si284.2.scp
         lines = scp_file.readlines()
-        for line in lines[:2]:
+        for line in lines:
             temp = str(line).split()[1]
             file_loc = temp.split(':')[0][C:]
             # ark file path; keep [18:]
