@@ -26,17 +26,15 @@ class classification_net(torch.nn.Module):
             self.PRE_TRAIN = True
 
             # rnn_pretrain.eval()
-
-
-        self.hidden_layer = torch.nn.Linear(INPUT_SIZE, HIDDEN_SIZE)
-        self.out = torch.nn.Linear(HIDDEN_SIZE, OUTPUT_SIZE)
+        # self.hidden_layer = torch.nn.Linear(INPUT_SIZE, HIDDEN_SIZE)
+        self.out = torch.nn.Linear(INPUT_SIZE, OUTPUT_SIZE)
 
     def forward(self, x):
         if self.PRE_TRAIN:
             x = torch.unsqueeze(x, 0)
             x, states = self.pre_train_model(x)
             x = x[0]
-        x = torch.relu(self.hidden_layer(x))
+        # x = torch.relu(self.hidden_layer(x))
         x = self.out(x)
         # x = torch.nn.functional.softmax(x)
         return x
