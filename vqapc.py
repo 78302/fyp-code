@@ -242,7 +242,7 @@ class toy_vqapc(nn.Module):
     def forward(self, x, testing):
         r_out, (h_s, h_c) = self.rnn(x)
 
-        logits_BxLxC, rnn_outputs_BxLxH = self.vq_layer(r_out, testing)
+        logits_BxLxC, rnn_outputs_BxLxH = self.vq_layer(r_out, True)
         output = self.fc(rnn_outputs_BxLxH)
         return output
 
