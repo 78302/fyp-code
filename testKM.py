@@ -95,7 +95,7 @@ for e in range(EPOCH):
             if PRETRAIN_PATH:
                 utt_mat = torch.Tensor(utt_mat).to(DEVICE)
                 utt_mat = torch.unsqueeze(utt_mat, 0)
-                rep = apc(utt_mat)
+                rep = apc(x=utt_mat, testing=True)
                 rep = rep.cpu()
                 utt_mat = rep.detach().numpy()[0]
 
