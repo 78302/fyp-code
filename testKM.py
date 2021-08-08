@@ -58,16 +58,7 @@ k=K
 
 # Load model:
 if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
-
-    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#     print(DEVICE)
-
-    apc = toy_vqapc(INPUT_SIZE=40, HIDDEN_SIZE=512, LAYERS=4).to(DEVICE) # toy_lstm
-    optimizer_pretrain = torch.optim.Adam(apc.parameters(), lr=0.001)  # just attach but no use
-    apc, optimizer_pretrain = load_model(PRETRAIN_PATH, apc, optimizer_pretrain) # load the model
-    apc = nn.Sequential(*list(apc.children())[:-1]).to(DEVICE)  # only take the LSTM part
-    apc.eval()
-    # apc = pretrain_representations(PRETRAIN_PATH)
+    apc = pretrain_representations(PRETRAIN_PATH)
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Load ceters and loss
