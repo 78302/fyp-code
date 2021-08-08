@@ -219,6 +219,7 @@ class GumbelAPCModel(nn.Module):
 
     return predicted_BxLxM, hiddens_NxBxLxH, logits_NxBxLxC
 
+
 class toy_vqapc(nn.Module):
     def __init__(self, INPUT_SIZE, HIDDEN_SIZE, LAYERS):
         super(toy_vqapc, self).__init__()
@@ -239,10 +240,10 @@ class toy_vqapc(nn.Module):
         self.h_s = None
         self.h_c = None
 
-    def forward(self, x, testing):
+    def forward(self, x, testing=True):
         r_out, (h_s, h_c) = self.rnn(x)
 
-        logits_BxLxC, rnn_outputs_BxLxH = self.vq_layer(r_out, True)
+        logits_BxLxC, rnn_outputs_BxLxH = self.vq_layer(r_out, testing)
         output = self.fc(rnn_outputs_BxLxH)
         return output
 

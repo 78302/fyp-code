@@ -58,7 +58,7 @@ k=K
 
 # Load model:
 if PRETRAIN_PATH:  # './pretrain_model/model/Epoch50.pth.tar'
-    apc = pretrain_representations(PRETRAIN_PATH)
+    model = pretrain_representations(PRETRAIN_PATH)
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Load ceters and loss
@@ -95,7 +95,7 @@ for e in range(EPOCH):
             if PRETRAIN_PATH:
                 utt_mat = torch.Tensor(utt_mat).to(DEVICE)
                 utt_mat = torch.unsqueeze(utt_mat, 0)
-                rep = apc(utt_mat, testing=True)
+                rep = model(utt_mat)
                 rep = rep.cpu()
                 utt_mat = rep.detach().numpy()[0]
 
