@@ -8,7 +8,7 @@ from apc import toy_lstm
 from vqapc import toy_vqapc
 import glob
 import matplotlib.pyplot as plt
-from functions import assign_cluster, pretrain_representations, closest_centroid
+from functions import load_model, assign_cluster, pretrain_representations, closest_centroid
 import random
 
 # Load kmeans paras
