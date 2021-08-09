@@ -96,8 +96,8 @@ for e in range(EPOCH):
                 utt_mat = torch.Tensor(utt_mat).to(DEVICE)
                 utt_mat = torch.unsqueeze(utt_mat, 0)
                 rep = model(utt_mat)
-                print(rep)
-                rep = rep.cpu()
+                # print(rep)
+                rep = rep[0].cpu()
                 utt_mat = rep.detach().numpy()[0]
 
             # end = time.time()
