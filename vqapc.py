@@ -67,7 +67,7 @@ class VQLayer(nn.Module):
       logits_BxLxC = self.vq_logits(hiddens_BxLxH)
     else:
       # print(inputs_BxLxI)
-      logits_BxLxC = self.vq_logits(inputs_BxLxI)
+      logits_BxLxC = self.vq_logits(inputs_BxLxI[0])
 
     if True:
       # During inference, just take the max index.
@@ -243,7 +243,7 @@ class toy_vqapc(nn.Module):
 
     def forward(self, x):
         r_out, (h_s, h_c) = self.rnn(x)
-        print(r_out[0])
+        # print(r_out[0])
         logits_BxLxC, rnn_outputs_BxLxH = self.vq_layer(r_out)
         output = self.fc(rnn_outputs_BxLxH)
         return output
