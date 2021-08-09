@@ -66,6 +66,7 @@ class VQLayer(nn.Module):
       hiddens_BxLxH = self.relu(self.vq_hiddens(inputs_BxLxI))
       logits_BxLxC = self.vq_logits(hiddens_BxLxH)
     else:
+      print(logits_BxLxC)
       logits_BxLxC = self.vq_logits(inputs_BxLxI)
 
     if True:
@@ -243,7 +244,7 @@ class toy_vqapc(nn.Module):
     def forward(self, x):
         r_out, (h_s, h_c) = self.rnn(x)
 
-        logits_BxLxC, rnn_outputs_BxLxH = self.vq_layer(r_out[0])
+        logits_BxLxC, rnn_outputs_BxLxH = self.vq_layer(r_out)
         output = self.fc(rnn_outputs_BxLxH)
         return output
 
