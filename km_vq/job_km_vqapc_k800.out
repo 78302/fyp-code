@@ -1,0 +1,5 @@
+(800, 512)
+Epoch 1 error: 7.6485945, use 2335.0096383 seconds.
+Epoch 2 error: 0.0557040, use 2262.2108347 seconds.
+Epoch 3 error: 0.0559465, use 2282.8714566 seconds.
+Epoch 4 error: 0.0560514, use 2290.3135564 seconds.
