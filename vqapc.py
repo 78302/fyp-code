@@ -66,7 +66,7 @@ class VQLayer(nn.Module):
       hiddens_BxLxH = self.relu(self.vq_hiddens(inputs_BxLxI))
       logits_BxLxC = self.vq_logits(hiddens_BxLxH)
     else:
-      print(logits_BxLxC)
+      print(inputs_BxLxI)
       logits_BxLxC = self.vq_logits(inputs_BxLxI)
 
     if True:
