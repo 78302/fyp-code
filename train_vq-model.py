@@ -47,7 +47,7 @@ def main():
                         help="Mini-batch size.")
     parser.add_argument("--learning_rate", default=0.001, type=float,
                         help="Learning rate.")
-    parser.add_argument("--epochs", default=50, type=int,
+    parser.add_argument("--epochs", default=20, type=int,
                         help="Number of training epochs.")
     parser.add_argument("--n_future", default=2, type=int,
                         help="Given x_1, ..., x_t, predict x_{t + n_future}.")
@@ -147,7 +147,7 @@ def main():
 
     # Decide the file path under different environment
     # Python do not have switch case, use if else instead
-    TYPE = 1
+    TYPE = 0
     if TYPE == 1:  # under Ubbuntu test environment
         TRAIN_SCP_PATH = './data/si284-0.9-train.fbank.scp'
         DEV_SCP_PATH = './data/si284-0.9-train.fbank.scp'
@@ -173,7 +173,7 @@ def main():
         # Read data index from the total scp file
         with open(TRAIN_SCP_PATH, 'rb') as scp_file:
             lines = scp_file.readlines()
-        for line in lines[:1]:
+        for line in lines[:100]:
             temp = str(line).split()[1]
             file_loc = temp.split(':')[0][C:]
             pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
@@ -208,7 +208,7 @@ def main():
         with torch.set_grad_enabled(False):
             with open(DEV_SCP_PATH, 'rb') as scp_file:
                 lines = scp_file.readlines()
-            for line in lines[:1]:
+            for line in lines[:100]:
                 temp = str(line).split()[1]
                 file_loc = temp.split(':')[0][C:]
                 pointer = temp.split(':')[1][:-3].replace('\\r', '')  # pointer to the utterance
