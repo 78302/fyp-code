@@ -6,7 +6,8 @@ from torch.autograd import Variable
 
 
 def sample_gumbel(shape, eps=1e-20):
-    U = torch.rand(shape).cuda()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
+    U = torch.rand(shape).to(device)
     return -Variable(torch.log(-torch.log(U + eps) + eps))
 
 

@@ -129,7 +129,7 @@ def main():
                            code_dim=config.code_dim,
                            gumbel_temperature=config.gumbel_temperature,
                            vq_hidden_size=config.vq_hidden_size,
-                           apply_VQ=[0, 0, 0, 1]).to(device)
+                           apply_VQ=[1]).to(device)
 
     # model = nn.DataParallel(model)
 
@@ -147,7 +147,7 @@ def main():
 
     # Decide the file path under different environment
     # Python do not have switch case, use if else instead
-    TYPE = 0
+    TYPE = 1
     if TYPE == 1:  # under Ubbuntu test environment
         TRAIN_SCP_PATH = './data/si284-0.9-train.fbank.scp'
         DEV_SCP_PATH = './data/si284-0.9-train.fbank.scp'
